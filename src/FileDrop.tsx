@@ -62,7 +62,7 @@ export default function FileDrop({ files, onChange }: { files: File[]; onChange:
         >
           <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
         </svg>
-        <span>drop poster, key frames or a pdf here — or click to browse</span>
+        <span>drop poster, key frames or a pdf here - or click to browse</span>
       </div>
       <input
         ref={input}

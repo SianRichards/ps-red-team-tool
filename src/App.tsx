@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Config, Effort, FileUpload, ModelChoice, ReviewResult } from "../shared/schema";
+import AboutPanel from "./components/AboutPanel";
 import FileDrop from "./FileDrop";
 import ReportView from "./Report";
 
@@ -26,6 +27,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ReviewResult | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const aboutBtn = useRef<HTMLButtonElement>(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     const t = document.documentElement.dataset.theme;
     return t === "light" ? "light" : "dark";
@@ -76,6 +79,13 @@ export default function App() {
           <span className="flex items-baseline gap-4">
             <span className="hidden text-sm lowercase opacity-70 sm:inline">review draft materials before launch</span>
             <button
+              ref={aboutBtn}
+              onClick={() => setAboutOpen(true)}
+              className="text-sm lowercase underline-offset-4 hover:underline"
+            >
+              about
+            </button>
+            <button
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
               className="rounded-full border border-fg px-3 py-0.5 text-sm lowercase hover:bg-fg hover:text-page"
@@ -97,14 +107,14 @@ export default function App() {
                 placement
                 <input
                   className={field}
-                  placeholder="e.g. London Underground, Instagram"
+                  placeholder="e.g. Instagram, public transportation"
                   value={placement}
                   onChange={(e) => setPlacement(e.target.value)}
                 />
               </label>
               <label className="text-sm lowercase">
                 target audience
-                <input className={field} value={audience} onChange={(e) => setAudience(e.target.value)} />
+                <input className={field} placeholder="e.g. young adults, commuters" value={audience} onChange={(e) => setAudience(e.target.value)} />
               </label>
               <label className="text-sm lowercase">
                 model
@@ -155,6 +165,13 @@ export default function App() {
 
         <footer className="text-right text-xs opacity-70">{result ? "report" : "new review"}</footer>
       </div>
+      <AboutPanel
+        open={aboutOpen}
+        onClose={() => {
+          setAboutOpen(false);
+          aboutBtn.current?.focus();
+        }}
+      />
     </div>
   );
 }
