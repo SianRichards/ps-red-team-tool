@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Config, Effort, FileUpload, ModelChoice, ReviewResponse } from "../shared/schema";
+import FileDrop from "./FileDrop";
 import ReportView from "./Report";
 
-const field = "w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm";
+const field = "mt-1 w-full border-0 bg-transparent py-1 text-base outline-none";
 
 function readFile(file: File): Promise<FileUpload> {
   return new Promise((resolve, reject) => {
@@ -25,6 +26,19 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ReviewResponse | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    const t = document.documentElement.dataset.theme;
+    return t === "light" ? "light" : "dark";
+  });
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+  }
 
   useEffect(() => {
     fetch("/api/config")
@@ -55,80 +69,92 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
-      <aside className="w-64 shrink-0 space-y-3 border-r border-gray-200 bg-white p-4">
-        <h2 className="font-semibold">Settings</h2>
-        <label className="block text-sm">
-          Campaign name
-          <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
-        </label>
-        <label className="block text-sm">
-          Placement
-          <input
-            className={field}
-            placeholder="e.g. London Underground, Instagram"
-            value={placement}
-            onChange={(e) => setPlacement(e.target.value)}
-          />
-        </label>
-        <label className="block text-sm">
-          Target audience
-          <input className={field} value={audience} onChange={(e) => setAudience(e.target.value)} />
-        </label>
-        <label className="block text-sm">
-          Model
-          <select className={field} value={model} onChange={(e) => setModel(e.target.value as ModelChoice)}>
-            <option value="default">Sonnet (default)</option>
-            <option value="deep">Opus (deep review)</option>
-          </select>
-          {config && <span className="text-xs text-gray-500">{config.models[model]}</span>}
-        </label>
-        <label className="block text-sm">
-          Effort
-          <select className={field} value={effort} onChange={(e) => setEffort(e.target.value as Effort)}>
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
-          </select>
-        </label>
-      </aside>
-
-      <main className="mx-auto w-full max-w-4xl space-y-4 p-6">
-        <header>
-          <h1 className="text-2xl font-bold">Campaign Red Team</h1>
-          <p className="text-sm text-gray-600">Review draft campaign materials before launch.</p>
+    <div className="min-h-screen p-3 sm:p-5">
+      <div className="frame flex min-h-[calc(100vh-2.5rem)] flex-col px-6 py-6 sm:px-10">
+        <header className="flex items-baseline justify-between border-b border-red pb-3">
+          <span className="font-semibold lowercase">campaign red team</span>
+          <span className="flex items-baseline gap-4">
+            <span className="hidden text-sm lowercase opacity-70 sm:inline">review draft materials before launch</span>
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              className="rounded-full border border-fg px-3 py-0.5 text-sm lowercase hover:bg-fg hover:text-page"
+            >
+              {theme === "dark" ? "light mode" : "dark mode"}
+            </button>
+          </span>
         </header>
 
-        <label className="block text-sm font-medium">
-          Paste text, script or video transcript
-          <textarea
-            className={`${field} mt-1 h-48`}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </label>
-        <label className="block text-sm font-medium">
-          Or upload poster / key frames (images) or a PDF
-          <input
-            type="file"
-            multiple
-            accept="image/png,image/jpeg,image/webp,application/pdf"
-            className="mt-1 block text-sm"
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-          />
-        </label>
+        <div className="flex flex-1 flex-col gap-10 py-10 lg:flex-row">
+          <aside className="w-full shrink-0 lg:w-64">
+            <h2 className="big-title mb-6 text-5xl">red team</h2>
+            <div className="divide-y divide-fg border-y border-fg [&>label]:block [&>label]:py-3">
+              <label className="text-sm lowercase">
+                campaign name
+                <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
+              </label>
+              <label className="text-sm lowercase">
+                placement
+                <input
+                  className={field}
+                  placeholder="e.g. London Underground, Instagram"
+                  value={placement}
+                  onChange={(e) => setPlacement(e.target.value)}
+                />
+              </label>
+              <label className="text-sm lowercase">
+                target audience
+                <input className={field} value={audience} onChange={(e) => setAudience(e.target.value)} />
+              </label>
+              <label className="text-sm lowercase">
+                model
+                <select className={field} value={model} onChange={(e) => setModel(e.target.value as ModelChoice)}>
+                  <option value="default">Sonnet (default)</option>
+                  <option value="deep">Opus (deep review)</option>
+                </select>
+                {config && <span className="text-sm opacity-70">{config.models[model]}</span>}
+              </label>
+              <label className="text-sm lowercase">
+                effort
+                <select className={field} value={effort} onChange={(e) => setEffort(e.target.value as Effort)}>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+              </label>
+            </div>
+          </aside>
 
-        <button
-          onClick={run}
-          disabled={loading}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Reviewing..." : "Run review"}
-        </button>
-        {error && <p className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-900">{error}</p>}
+          <main className="min-w-0 flex-1 space-y-6">
+            <label className="block text-sm lowercase">
+              paste text, script or video transcript
+              <textarea
+                className={`${field} panel h-48 border border-fg px-3`}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+            </label>
+            <FileDrop files={files} onChange={setFiles} />
 
-        {result && <ReportView result={result} />}
-      </main>
+            <button
+              onClick={run}
+              disabled={loading}
+              className="rounded-full bg-red px-8 py-3 font-semibold lowercase text-white hover:bg-fg hover:text-page disabled:opacity-50"
+            >
+              {loading ? "Reviewing..." : "Run review"}
+            </button>
+            {error && (
+              <p className="border border-fg bg-fg px-5 py-3 text-page">
+                <strong>Error:</strong> {error}
+              </p>
+            )}
+
+            {result && <ReportView result={result} />}
+          </main>
+        </div>
+
+        <footer className="text-right text-xs opacity-70">{result ? "report" : "new review"}</footer>
+      </div>
     </div>
   );
 }

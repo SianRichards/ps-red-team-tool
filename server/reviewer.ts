@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { PDFParse } from "pdf-parse";
 import {
   Report,
+  computeVerdict,
   type ReviewRequest,
   type ReviewResponse,
   type Usage,
@@ -38,6 +39,14 @@ Exact shape:
   "legal_flags": [string]
 }
 Rules: never invent rulings or sources. Only cite rulings/documents that appear in the reference docs, and set source_ref to the exact doc name (or null). If no reference doc supports a claim, say so in notes. Sort risks High first.
+
+Length limits (strict):
+- summary: max 2 sentences.
+- claims[].notes: max 20 words.
+- attacks[].quote: one line, max 25 words.
+- fixes[].fix and fixes[].sharpest_defensible_version: max 30 words each; do not restate the claim.
+- working: max 5 items, one line each.
+- No preamble, reasoning or any text outside the JSON object.
 `;
 
 export class ReviewError extends Error {}
@@ -160,7 +169,10 @@ const addUsage = (a: Usage, b: Usage): Usage => ({
   cost: a.cost == null || b.cost == null ? (a.cost ?? b.cost) : a.cost + b.cost,
 });
 
-export async function runReview(req: ReviewRequest): Promise<ReviewResponse> {
+export async function runReview(
+  req: ReviewRequest,
+  opts: { save?: boolean } = {},
+): Promise<ReviewResponse> {
   if (!req.text.trim() && !req.files.length) throw new ReviewError("Nothing to review.");
   const model = MODELS[req.model] ?? MODELS.default;
   const docs = await loadReferenceDocs();
@@ -191,8 +203,14 @@ export async function runReview(req: ReviewRequest): Promise<ReviewResponse> {
       parsed = { ok: false, error: String(e) };
     }
     if (parsed.ok) {
-      const report = { ...parsed.data, unverified_citations: checkCitations(parsed.data, docs) };
-      const saved_as = await saveReport(report, req, model);
+      const verdict = computeVerdict(parsed.data.risks);
+      const report: Report = {
+        ...parsed.data,
+        verdict,
+        model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
+        unverified_citations: checkCitations(parsed.data, docs),
+      };
+      const saved_as = opts.save === false ? "" : await saveReport(report, req, model);
       return { report, usage, model, saved_as };
     }
     lastErr = parsed.error;

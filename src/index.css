@@ -1,1 +1,80 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-orange: #f2772e;
+  --color-black: #0a0a0a;
+  --color-red: #b3070b;
+  --color-fg: #ffffff;
+  --color-page: #111111;
+  --color-backdrop: #0a0a0a;
+  --color-accent-text: #f2772e;
+}
+
+:root[data-theme="light"] {
+  --color-fg: #111111;
+  --color-page: #f7f4ef;
+  --color-backdrop: #e9e4dc;
+  --color-accent-text: #b8530f;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-backdrop);
+}
+
+body {
+  margin: 0;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Large rounded frame, flat */
+.frame {
+  border-radius: 24px;
+  background: var(--color-page);
+}
+
+.big-title {
+  font-weight: 800;
+  text-transform: lowercase;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.panel {
+  background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+}
+
+input,
+textarea,
+select {
+  color: var(--color-fg);
+}
+
+select option {
+  color: var(--color-fg);
+  background: var(--color-page);
+}
+
+::placeholder {
+  color: color-mix(in srgb, var(--color-fg) 55%, transparent);
+}
+
+button,
+select,
+input[type="file"],
+summary {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid #f2772e;
+  outline-offset: 2px;
+}

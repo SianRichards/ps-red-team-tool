@@ -1,0 +1,62 @@
+{
+  "timestamp": "20261016-145726",
+  "runs": 1,
+  "efforts": [
+    "medium"
+  ],
+  "judge_model": "anthropic/claude-haiku-5.5",
+  "results": [
+    {
+      "case": "salmon-dont-buy-it",
+      "effort": "medium",
+      "runs_ok": 1,
+      "runs": 1,
+      "expected_verdict": "High risk, get legal review",
+      "verdict_match_rate": 1,
+      "must_flag": [
+        {
+          "item": "The absolute claim that ALL Scottish salmon in UK supermarkets comes from factory farms lacks evidence or a definition of 'factory farm'",
+          "catch_rate": 1
+        },
+        {
+          "item": "'Seasoned with... chemicals' implies chemical residues in the food (a food safety implication) that the ad does not substantiate",
+          "catch_rate": 1
+        },
+        {
+          "item": "Formaldehyde (and the chemical list) needs verifying as currently used in Scottish salmon farming",
+          "catch_rate": 1
+        },
+        {
+          "item": "'Doused in toxic chemicals' or 'flesh-eating' is emotive or exaggerated and needs sourced, measurable wording",
+          "catch_rate": 1
+        },
+        {
+          "item": "The 'They say... gourmet dining' attribution is unsourced or a strawman",
+          "catch_rate": 1
+        }
+      ],
+      "avg_completion_tokens": 2529,
+      "avg_cost": 0.0330375,
+      "runs_detail": [
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "usage": {
+            "prompt_tokens": 3141,
+            "cached_tokens": 0,
+            "completion_tokens": 2529,
+            "cost": 0.0330375
+          },
+          "judge_cost": 0.0003402
+        }
+      ]
+    }
+  ]
+}

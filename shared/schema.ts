@@ -42,11 +42,21 @@ export const Report = z.object({
   fixes: z.array(Fix).default([]),
   working: z.array(z.string()).default([]),
   verdict: z.enum(VERDICTS),
+  // The model's own verdict, kept when the code-computed verdict differs.
+  model_verdict: z.enum(VERDICTS).optional(),
   legal_flags: z.array(z.string()).default([]),
   // Filled by the server, not the model.
   unverified_citations: z.array(z.string()).default([]),
 });
 export type Report = z.infer<typeof Report>;
+
+/** Verdict derived from the risk list, so it always agrees with the table. */
+export function computeVerdict(risks: { rating: string; type: string }[]): (typeof VERDICTS)[number] {
+  if (risks.some((r) => r.rating === "High" && r.type === "regulatory")) return "High risk, get legal review";
+  if (risks.some((r) => r.rating === "High")) return "Needs changes";
+  if (risks.some((r) => r.rating === "Medium")) return "Ready with minor fixes";
+  return "Ready";
+}
 
 export interface Usage {
   prompt_tokens: number;

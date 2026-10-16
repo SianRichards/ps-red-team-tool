@@ -2,25 +2,48 @@ import type { ReactNode } from "react";
 import type { Report, ReviewResponse } from "../shared/schema";
 
 const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
-const HIGH_ROW = "bg-red-50 font-medium";
+const BADGE = {
+  High: "bg-fg text-page",
+  Medium: "bg-orange text-black",
+  Low: "border border-fg text-fg",
+} as const;
 
-function Section({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
+function Badge({ level }: { level: keyof typeof BADGE }) {
   return (
-    <details open={open} className="rounded border border-gray-200 bg-white">
-      <summary className="cursor-pointer select-none px-4 py-2 font-semibold">{title}</summary>
-      <div className="overflow-x-auto px-4 pb-4">{children}</div>
+    <span className={`inline-block rounded-full px-3 py-0.5 text-sm font-semibold ${BADGE[level]}`}>{level}</span>
+  );
+}
+
+function Section({
+  title,
+  index,
+  children,
+  open = false,
+}: {
+  title: string;
+  index: number;
+  children: ReactNode;
+  open?: boolean;
+}) {
+  return (
+    <details open={open} className="panel border border-fg">
+      <summary className="select-none px-5 py-3 text-sm font-semibold lowercase">
+        <span aria-hidden className="mr-2 inline-block h-2 w-2 bg-red align-middle" />
+        {title} {String(index).padStart(2, "0")}
+      </summary>
+      <div className="overflow-x-auto px-5 pb-5 pt-2">{children}</div>
     </details>
   );
 }
 
 function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[]; high?: boolean }[] }) {
-  if (!rows.length) return <p className="text-sm text-gray-500">None.</p>;
+  if (!rows.length) return <p className="opacity-70">None.</p>;
   return (
-    <table className="w-full text-left text-sm">
+    <table className="w-full text-left text-[15px]">
       <thead>
-        <tr className="border-b border-gray-300">
+        <tr className="border-b border-fg">
           {head.map((h) => (
-            <th key={h} className="px-2 py-1 font-semibold">
+            <th key={h} className="px-3 py-2 text-sm font-semibold lowercase">
               {h}
             </th>
           ))}
@@ -28,9 +51,9 @@ function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[]; hig
       </thead>
       <tbody>
         {rows.map((r, i) => (
-          <tr key={i} className={`border-b border-gray-100 align-top ${r.high ? HIGH_ROW : ""}`}>
+          <tr key={i} className={`border-b border-fg/60 align-top ${r.high ? "font-medium" : ""}`}>
             {r.cells.map((c, j) => (
-              <td key={j} className="px-2 py-1">
+              <td key={j} className="px-3 py-2">
                 {c}
               </td>
             ))}
@@ -42,9 +65,9 @@ function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[]; hig
 }
 
 function List({ items }: { items: string[] }) {
-  if (!items.length) return <p className="text-sm text-gray-500">None.</p>;
+  if (!items.length) return <p className="opacity-70">None.</p>;
   return (
-    <ul className="list-disc space-y-1 pl-5 text-sm">
+    <ul className="list-disc space-y-2 pl-5 text-[15px]">
       {items.map((x, i) => (
         <li key={i}>{x}</li>
       ))}
@@ -52,67 +75,103 @@ function List({ items }: { items: string[] }) {
   );
 }
 
+function Cards({ items }: { items: { label: string; badge?: ReactNode; body: ReactNode }[] }) {
+  if (!items.length) return <p className="opacity-70">None.</p>;
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {items.map((c, i) => (
+        <div key={i} className="flex flex-col gap-3 border border-fg p-4 text-[15px]">
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-semibold">{c.label}</p>
+            {c.badge}
+          </div>
+          <div className="space-y-2 opacity-90">{c.body}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function verdictClass(v: Report["verdict"]) {
-  if (v === "High risk, get legal review") return "bg-red-100 text-red-900 border-red-300";
-  if (v === "Needs changes") return "bg-amber-100 text-amber-900 border-amber-300";
-  return "bg-green-100 text-green-900 border-green-300";
+  if (v === "High risk, get legal review") return "text-fg";
+  if (v === "Needs changes" || v === "Ready with minor fixes") return "text-accent-text";
+  return "text-fg";
 }
 
 export default function ReportView({ result }: { result: ReviewResponse }) {
   const { report, usage } = result;
   const risks = [...report.risks].sort((a, b) => RATING_ORDER[a.rating] - RATING_ORDER[b.rating]);
   return (
-    <div className="space-y-3">
-      <p className="rounded border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900">
+    <div className="space-y-6">
+      <div className="border-t border-fg pt-6">
+        <p className="mb-2 text-sm lowercase opacity-70">verdict</p>
+        <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(report.verdict)}`}>{report.verdict}</h2>
+        <p className="mt-4 max-w-2xl text-[15px]">{report.summary}</p>
+        {report.model_verdict && (
+          <p className="mt-2 text-sm opacity-70">
+            Verdict is computed from the risk ratings. The model's own verdict was "{report.model_verdict}".
+          </p>
+        )}
+      </div>
+      <p className="text-sm opacity-70">
         Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
       </p>
-      <div className={`rounded border px-4 py-2 font-semibold ${verdictClass(report.verdict)}`}>
-        Verdict: {report.verdict}
-      </div>
-      <p>{report.summary}</p>
 
       {report.unverified_citations.length > 0 && (
-        <div className="rounded border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+        <div className="bg-orange px-5 py-4 text-[15px] text-black">
           <p className="font-semibold">Citation check</p>
           <List items={report.unverified_citations} />
         </div>
       )}
 
-      <Section title="Risks" open>
-        <Table
-          head={["Issue", "Rating", "Type"]}
-          rows={risks.map((r) => ({ cells: [r.issue, r.rating, r.type], high: r.rating === "High" }))}
+      <Section title="risks" index={1} open>
+        <Cards
+          items={risks.map((r) => ({
+            label: r.issue,
+            badge: <Badge level={r.rating} />,
+            body: <p className="text-sm lowercase">{r.type}</p>,
+          }))}
         />
       </Section>
-      <Section title="Claims and evidence" open>
+      <Section title="claims" index={2} open>
         <Table
           head={["Claim", "Evidence", "Risk", "Notes", "Source"]}
           rows={report.claims.map((c) => ({
-            cells: [c.claim, c.evidence_status, c.risk, c.notes, c.source_ref ?? "-"],
+            cells: [c.claim, c.evidence_status, <Badge level={c.risk} />, c.notes, c.source_ref ?? "-"],
             high: c.risk === "High",
           }))}
         />
       </Section>
-      <Section title="Attacks critics could make">
+      <Section title="attacks" index={3}>
         <Table head={["Critic", "Quote"]} rows={report.attacks.map((a) => ({ cells: [a.critic, a.quote] }))} />
       </Section>
-      <Section title="Fixes" open>
-        <Table
-          head={["Issue", "Fix", "Sharpest defensible version"]}
-          rows={report.fixes.map((f) => ({ cells: [f.issue, f.fix, f.sharpest_defensible_version] }))}
+      <Section title="fixes" index={4} open>
+        <Cards
+          items={report.fixes.map((f) => ({
+            label: f.issue,
+            body: (
+              <>
+                <p>{f.fix}</p>
+                <p>
+                  <span className="text-sm lowercase text-accent-text">sharpest defensible version: </span>
+                  {f.sharpest_defensible_version}
+                </p>
+              </>
+            ),
+          }))}
         />
       </Section>
-      <Section title="What's working">
+      <Section title="what's working" index={5}>
         <List items={report.working} />
       </Section>
-      <Section title="Legal flags" open={report.legal_flags.length > 0}>
+      <Section title="legal flags" index={6} open={report.legal_flags.length > 0}>
         <List items={report.legal_flags} />
       </Section>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-sm opacity-70">
         {result.model} · prompt {usage.prompt_tokens.toLocaleString()} tokens (cached{" "}
         {usage.cached_tokens.toLocaleString()}) · completion {usage.completion_tokens.toLocaleString()} · cost{" "}
-        {usage.cost == null ? "n/a" : `$${usage.cost.toFixed(4)}`} · saved to {result.saved_as}
+        {usage.cost == null ? "n/a" : `$${usage.cost.toFixed(4)}`} {result.saved_as && ` · saved to ${result.saved_as}`}
       </p>
     </div>
   );

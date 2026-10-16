@@ -1,0 +1,12 @@
+{
+  "campaign": "Don't buy it",
+  "placement": "London Underground",
+  "expected_verdict": "High risk, get legal review",
+  "must_flag": [
+    "The absolute claim that ALL Scottish salmon in UK supermarkets comes from factory farms lacks evidence or a definition of 'factory farm'",
+    "'Seasoned with... chemicals' implies chemical residues in the food (a food safety implication) that the ad does not substantiate",
+    "Formaldehyde (and the chemical list) needs verifying as currently used in Scottish salmon farming",
+    "'Doused in toxic chemicals' or 'flesh-eating' is emotive or exaggerated and needs sourced, measurable wording",
+    "The 'They say... gourmet dining' attribution is unsourced or a strawman"
+  ]
+}

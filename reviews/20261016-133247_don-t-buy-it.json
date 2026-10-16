@@ -1,0 +1,173 @@
+{
+  "model": "anthropic/claude-sonnet-5.5",
+  "campaign": "Don't buy it",
+  "placement": "London Underground",
+  "audience": "",
+  "summary": "A London Underground poster attacking Scottish farmed salmon. It uses the 'Don't Buy It' line to challenge 'gourmet dining' marketing. It claims all Scottish salmon in UK supermarkets comes from factory farms with endemic sea lice, and that fish are 'doused' in toxic chemicals (formaldehyde, deltamethrin, hydrogen peroxide). It targets general commuters and uses a gross-out angle.",
+  "claims": [
+    {
+      "claim": "They say Scottish salmon is 'gourmet dining'.",
+      "evidence_status": "Weak",
+      "risk": "Medium",
+      "notes": "Needs a real, attributable example of the industry or retailers using this phrase. If 'They' implies a specific body (e.g. Salmon Scotland, retailers, Scottish Government) and no quote exists, it is a strawman. Keep a dated screenshot or source. No reference doc supports it.",
+      "source_ref": null
+    },
+    {
+      "claim": "It's been seasoned with lemon, dill and a cocktail of chemicals.",
+      "evidence_status": "Weak",
+      "risk": "High",
+      "notes": "Implies chemical residue in the product on the consumer's plate. The body copy only talks about treatments during farming. Unless there is evidence of residues in retail fillets, this reads as a food safety claim. 'Seasoned' suggests the chemicals are added to the product. Misleading by implication (CAP Code Section 3 - verify). No reference doc supports it.",
+      "source_ref": null
+    },
+    {
+      "claim": "All Scottish salmon sold in UK supermarkets comes from factory farms.",
+      "evidence_status": "Missing",
+      "risk": "High",
+      "notes": "Absolute 'all' claim. 'Factory farm' has no legal definition for aquaculture, so the term needs a stated definition and evidence that every supplier meets it. Organic and RSPCA Assured / other higher-welfare Scottish salmon are sold in UK supermarkets, so 'all' is likely challengeable. Also check the stocking densities and the farming methods across all supplying companies. No reference doc supports it.",
+      "source_ref": null
+    },
+    {
+      "claim": "Flesh-eating sea lice are endemic.",
+      "evidence_status": "Weak",
+      "risk": "Medium",
+      "notes": "Sea lice do feed on skin, mucus and blood and can cause lesions. 'Flesh-eating' is emotive and could be called exaggeration. 'Endemic' needs support from Scottish Government/industry lice and mortality data, with a current year. Also check the nuance: levels vary by site and season. No reference doc supports it.",
+      "source_ref": null
+    },
+    {
+      "claim": "To treat parasitic infestations and other diseases, salmon are doused in toxic chemicals.",
+      "evidence_status": "Weak",
+      "risk": "High",
+      "notes": "'Doused' implies routine, heavy use. Treatments are bath or in-feed and are licensed and regulated (SEPA, VMD). Need data on the frequency and scale of use. 'Toxic' is technically defensible for some at concentration, but critics will say it is dose-dependent and approved. Hydrogen peroxide is also used widely in other contexts. No reference doc supports it.",
+      "source_ref": null
+    },
+    {
+      "claim": "Treatments include formaldehyde, deltamethrin and hydrogen peroxide.",
+      "evidence_status": "Weak",
+      "risk": "High",
+      "notes": "Hydrogen peroxide and deltamethrin are used in Scottish salmon farming (verify current authorisations). Formaldehyde is the one most likely to be challenged: confirm it is actually used in Scottish salmon farming currently, and not historically or in other countries or sectors. If it is not currently authorised or used there, delete it. Present tense needs current evidence. No reference doc supports it.",
+      "source_ref": null
+    }
+  ],
+  "attacks": [
+    {
+      "critic": "industry",
+      "quote": "Every fish is health-checked, every treatment is prescribed by a vet and regulated. This poster says 'all' Scottish salmon is factory farmed and that it's seasoned with chemicals. That is false and scaremongering about a food that millions enjoy and that supports rural Scottish jobs. Formaldehyde? Show us where."
+    },
+    {
+      "critic": "asa",
+      "quote": "Complainants allege the ad misleadingly implies that salmon sold in supermarkets contains chemicals, that 'all' Scottish salmon is factory farmed, and that the treatments are used routinely. We will ask for documentary evidence for each claim and for the definition of 'factory farm'."
+    },
+    {
+      "critic": "media",
+      "quote": "Animal rights campaign claims your salmon is 'seasoned with chemicals'. Experts say no evidence of harmful residues and the treatments are licensed. Campaigners accused of food scare tactics and of attacking Scottish farmers."
+    },
+    {
+      "critic": "public",
+      "quote": "Now I'm being told my dinner is poisoned. Is that actually true? Feels like scare tactics. I can't afford organic anyway, and what am I supposed to eat instead?"
+    },
+    {
+      "critic": "ad_owner",
+      "quote": "This makes unverified food safety claims about a named product and could draw complaints. We'll want substantiation and sign-off before approving it on the network, and it may also fall under our rules on political or contentious advertising."
+    }
+  ],
+  "risks": [
+    {
+      "issue": "'All Scottish salmon in UK supermarkets comes from factory farms' is an absolute claim with no stated definition or evidence, and higher-welfare/organic Scottish salmon exists",
+      "rating": "High",
+      "type": "regulatory"
+    },
+    {
+      "issue": "'Seasoned with... a cocktail of chemicals' implies chemical residues in the food on the plate, which the body copy does not substantiate (food safety implication)",
+      "rating": "High",
+      "type": "regulatory"
+    },
+    {
+      "issue": "Formaldehyde: if not currently used in Scottish salmon farming, this is a factual error that discredits the whole poster",
+      "rating": "High",
+      "type": "reputational"
+    },
+    {
+      "issue": "'Doused in toxic chemicals' implies routine, heavy use without frequency or scale data, and ignores that treatments are licensed and regulated",
+      "rating": "High",
+      "type": "regulatory"
+    },
+    {
+      "issue": "Possible disparagement and defamation exposure for the Scottish salmon sector or named producers/brands if 'They say' is read as aimed at identifiable parties",
+      "rating": "Medium",
+      "type": "regulatory"
+    },
+    {
+      "issue": "'Flesh-eating' and 'endemic' are emotive and need current data",
+      "rating": "Medium",
+      "type": "regulatory"
+    },
+    {
+      "issue": "'They say... gourmet dining' strawman if no attributable source",
+      "rating": "Medium",
+      "type": "reputational"
+    },
+    {
+      "issue": "Text-heavy copy for an Underground poster, with a small-print feel to the body paragraph that reduces reach and shifts attention to the weakest claims",
+      "rating": "Medium",
+      "type": "audience"
+    },
+    {
+      "issue": "Food scare framing may be read as a health scare and feel manipulative, with no clear action beyond 'don't buy it'",
+      "rating": "Medium",
+      "type": "audience"
+    },
+    {
+      "issue": "Gross-out imagery (if used) in a public space where children travel, plus possible TfL objections on contentious or disparaging ads",
+      "rating": "Low",
+      "type": "regulatory"
+    }
+  ],
+  "fixes": [
+    {
+      "issue": "'All' Scottish salmon claim",
+      "fix": "Remove 'All' or prove it for every supermarket supplier. Define 'factory farm' (e.g. intensive pens with tens of thousands of fish at high stocking densities) and tie to evidence.",
+      "sharpest_defensible_version": "Most Scottish salmon sold in UK supermarkets is raised in crowded, intensive sea cages where sea lice are a constant problem. (Only if you hold market share data showing 'most'. Cite it in the evidence pack.)"
+    },
+    {
+      "issue": "'Seasoned with... chemicals' implies residues",
+      "fix": "Reframe the punchline to the farming process, not the product, unless you hold residue test evidence.",
+      "sharpest_defensible_version": "Served with lemon and dill. Raised with a cocktail of chemicals."
+    },
+    {
+      "issue": "Formaldehyde and the chemical list",
+      "fix": "Verify each chemical against current VMD/SEPA authorisations and usage data for Scottish salmon farms. Delete anything not currently used. Cite the year.",
+      "sharpest_defensible_version": "Scottish salmon farms treat lice with chemicals including hydrogen peroxide and deltamethrin. (Add formaldehyde only if you can evidence current use.)"
+    },
+    {
+      "issue": "'Doused in toxic chemicals' and 'flesh-eating'",
+      "fix": "Replace with measurable, sourced wording and add data on the number of treatments or mortality.",
+      "sharpest_defensible_version": "Sea lice eat the skin of living salmon. Farms respond with repeated chemical baths. (Only if you hold treatment-frequency data. Add the stat and the year.)"
+    },
+    {
+      "issue": "'They say... gourmet dining' attribution",
+      "fix": "Find and archive an actual quote from industry or retailer marketing, or reword so it targets marketing generally.",
+      "sharpest_defensible_version": "Sold as 'gourmet'. Raised in crowded cages and treated for parasites with chemicals. (Use the real quote and name the source in the evidence pack.)"
+    },
+    {
+      "issue": "Poster readability and ask",
+      "fix": "Cut body copy to one or two lines with a QR/URL for the evidence and a clear ask, and put the full sources on the landing page.",
+      "sharpest_defensible_version": "One hook, one proven stat, one URL with sources."
+    }
+  ],
+  "working": [
+    "The 'Don't Buy It' double meaning lands well with the 'gourmet dining' set-up.",
+    "The lemon and dill punchline is a sharp, memorable hook in the right format for commuters.",
+    "It challenges marketing language rather than asking people to go vegan.",
+    "The sea lice angle is a visceral, concrete detail with real evidence behind it if properly sourced.",
+    "Naming specific chemicals is stronger than vague 'toxins' wording, as long as each one is accurate."
+  ],
+  "verdict": "High risk, get legal review",
+  "legal_flags": [
+    "'All Scottish salmon in UK supermarkets' is an absolute claim that needs documentary evidence for every supplier and a stated definition of 'factory farm'.",
+    "'Seasoned with... chemicals' may imply product contamination or a food safety risk. Get a lawyer's view on the disparagement and misleading-implication exposure.",
+    "Verify the current use of formaldehyde, deltamethrin and hydrogen peroxide in Scottish salmon farming before publication.",
+    "Check defamation/malicious falsehood risk to the Scottish salmon sector or identifiable producers and brands.",
+    "No reference documents (CAP Code text, ASA rulings, TfL policy, evidence pack) were supplied beyond a placeholder, so rule references here are unverified and should be checked against source."
+  ],
+  "unverified_citations": []
+}
