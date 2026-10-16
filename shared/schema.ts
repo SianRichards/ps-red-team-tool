@@ -91,6 +91,11 @@ export interface ReviewResponse {
   saved_as: string;
 }
 
+// What the client receives. Usage and saved path stay server-side (logged and saved in the review JSON).
+export interface ReviewResult {
+  report: Report;
+}
+
 export interface Config {
   models: Record<ModelChoice, string>;
 }

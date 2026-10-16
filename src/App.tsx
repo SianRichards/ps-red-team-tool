@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Config, Effort, FileUpload, ModelChoice, ReviewResponse } from "../shared/schema";
+import type { Config, Effort, FileUpload, ModelChoice, ReviewResult } from "../shared/schema";
 import FileDrop from "./FileDrop";
 import ReportView from "./Report";
 
@@ -25,7 +25,7 @@ export default function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ReviewResponse | null>(null);
+  const [result, setResult] = useState<ReviewResult | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     const t = document.documentElement.dataset.theme;
     return t === "light" ? "light" : "dark";

@@ -20,7 +20,14 @@ app.post("/api/review", async (req, res) => {
     effort: ["low", "medium", "high"].includes(b.effort) ? b.effort : "medium",
   };
   try {
-    res.json(await runReview(body));
+    const { report, usage, model, saved_as } = await runReview(body);
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    console.log(
+      `[review] ${stamp} · ${model} · effort ${body.effort} · prompt ${usage.prompt_tokens.toLocaleString("en-US")} (cached ${usage.cached_tokens.toLocaleString("en-US")}) · completion ${usage.completion_tokens.toLocaleString("en-US")} · ${usage.cost == null ? "cost n/a" : `$${usage.cost.toFixed(4)}`} · saved ${saved_as}`,
+    );
+    res.json({ report });
   } catch (e: any) {
     console.error(e);
     res.status(e instanceof ReviewError ? 400 : 500).json({ error: e?.message ?? "Review failed" });

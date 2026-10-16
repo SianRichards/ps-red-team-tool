@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Report, ReviewResponse } from "../shared/schema";
+import type { Report, ReviewResult } from "../shared/schema";
 
 const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 const BADGE = {
@@ -98,8 +98,8 @@ function verdictClass(v: Report["verdict"]) {
   return "text-fg";
 }
 
-export default function ReportView({ result }: { result: ReviewResponse }) {
-  const { report, usage } = result;
+export default function ReportView({ result }: { result: ReviewResult }) {
+  const { report } = result;
   const risks = [...report.risks].sort((a, b) => RATING_ORDER[a.rating] - RATING_ORDER[b.rating]);
   return (
     <div className="space-y-6">
@@ -167,12 +167,6 @@ export default function ReportView({ result }: { result: ReviewResponse }) {
       <Section title="legal flags" index={6} open={report.legal_flags.length > 0}>
         <List items={report.legal_flags} />
       </Section>
-
-      <p className="text-sm opacity-70">
-        {result.model} · prompt {usage.prompt_tokens.toLocaleString()} tokens (cached{" "}
-        {usage.cached_tokens.toLocaleString()}) · completion {usage.completion_tokens.toLocaleString()} · cost{" "}
-        {usage.cost == null ? "n/a" : `$${usage.cost.toFixed(4)}`} {result.saved_as && ` · saved to ${result.saved_as}`}
-      </p>
     </div>
   );
 }

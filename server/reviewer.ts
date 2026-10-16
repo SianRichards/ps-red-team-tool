@@ -210,7 +210,7 @@ export async function runReview(
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
         unverified_citations: checkCitations(parsed.data, docs),
       };
-      const saved_as = opts.save === false ? "" : await saveReport(report, req, model);
+      const saved_as = opts.save === false ? "" : await saveReport(report, req, model, usage);
       return { report, usage, model, saved_as };
     }
     lastErr = parsed.error;
@@ -225,7 +225,7 @@ export async function runReview(
   throw new ReviewError(`Model returned invalid JSON twice: ${lastErr.slice(0, 300)}`);
 }
 
-async function saveReport(report: Report, req: ReviewRequest, model: string): Promise<string> {
+async function saveReport(report: Report, req: ReviewRequest, model: string, usage: Usage): Promise<string> {
   await fs.mkdir(REVIEWS_DIR, { recursive: true });
   const slug =
     req.campaign.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) ||
@@ -234,6 +234,8 @@ async function saveReport(report: Report, req: ReviewRequest, model: string): Pr
   const name = `${ts}_${slug}.json`;
   const payload = {
     model,
+    effort: req.effort,
+    usage,
     campaign: req.campaign,
     placement: req.placement,
     audience: req.audience,
