@@ -6,6 +6,7 @@ import { PDFParse } from "pdf-parse";
 import {
   Report,
   computeVerdict,
+  computeVerdictAfterChecklist,
   type ReviewRequest,
   type ReviewResponse,
   type Usage,
@@ -30,15 +31,26 @@ Respond with a single JSON object and nothing else (no markdown fences, no comme
 Exact shape:
 {
   "summary": string,
-  "claims": [{"claim": string, "evidence_status": "Sourced"|"Weak"|"Missing", "risk": "High"|"Medium"|"Low", "notes": string, "source_ref": <exact reference doc name> or null}],
+  "claims": [{"claim": string, "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "source_ref": <exact reference doc name> or null}],
   "attacks": [{"critic": "industry"|"asa"|"media"|"public"|"ad_owner", "quote": string}],
-  "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience"}],
+  "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience", "fixable_by_evidence": boolean}],
   "fixes": [{"issue": string, "fix": string, "sharpest_defensible_version": string}],
+  "checklist": [{"item": string, "related_claim": string or null, "why": string, "evidence_needed": string}],
   "working": [string],
   "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review",
   "legal_flags": [string]
 }
-Rules: never invent rulings or sources. Only cite rulings/documents that appear in the reference docs, and set source_ref to the exact doc name (or null). If no reference doc supports a claim, say so in notes. Sort risks High first.
+Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort risks High first.
+
+Evidence and checklist rules:
+- Assess the ad as submitted. Missing evidence counts as a risk, but set fixable_by_evidence = true on it and add a checklist item. Use evidence_status "Not checked" when no source has been provided.
+- CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
+- If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the fix is rewording.
+- Distress, offence and imagery risks are never fixable by evidence (fixable_by_evidence = false).
+- Only put an item on the checklist if holding evidence or sign-off would fix it. A claim that needs rewording goes in fixes only, never on the checklist.
+- Media-owner acceptance (TfL, Global and similar) is a checklist item, not a risk.
+- Each checklist item's evidence_needed must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
+- In every free-text field, cite rules and rulings by name (e.g. "CAP Code rule 3.7", "ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
 
 Length limits (strict):
 - summary: max 2 sentences.
@@ -210,6 +222,7 @@ export async function runReview(
         ...parsed.data,
         verdict,
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
+        verdict_after_checklist: computeVerdictAfterChecklist(parsed.data.risks),
         unverified_citations: checkCitations(parsed.data, docs),
       };
       const saved_as = opts.save === false ? "" : await saveReport(report, req, model, usage);

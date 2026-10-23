@@ -92,7 +92,7 @@ function Cards({ items }: { items: { label: string; badge?: ReactNode; body: Rea
   );
 }
 
-function verdictClass(v: Report["verdict"]) {
+function verdictClass(v: NonNullable<Report["verdict"]>) {
   if (v === "High risk, get legal review") return "text-fg";
   if (v === "Needs changes" || v === "Ready with minor fixes") return "text-accent-text";
   return "text-fg";
@@ -104,15 +104,54 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   return (
     <div className="space-y-6">
       <div className="border-t border-fg pt-6">
-        <p className="mb-2 text-sm lowercase opacity-70">verdict</p>
+        <p className="mb-2 text-sm lowercase opacity-70">as it stands</p>
         <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(report.verdict)}`}>{report.verdict}</h2>
         <p className="mt-4 max-w-2xl text-[15px]">{report.summary}</p>
+        {risks.length > 0 && (
+          <div className="mt-4 max-w-2xl">
+            <p className="mb-1 text-sm lowercase opacity-70">main reasons</p>
+            <List items={risks.slice(0, 3).map((r) => r.issue)} />
+          </div>
+        )}
         {report.model_verdict && (
           <p className="mt-2 text-sm opacity-70">
             Verdict is computed from the risk ratings. The model's own verdict was "{report.model_verdict}".
           </p>
         )}
       </div>
+
+      {report.checklist.length > 0 && (
+        <div className="border border-fg p-5">
+          <p className="mb-3 text-sm font-semibold lowercase">to lower the risk, make sure you have:</p>
+          <ul className="space-y-4 text-[15px]">
+            {report.checklist.map((c, i) => (
+              <li key={i}>
+                <label className="flex items-start gap-3">
+                  <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="font-medium">{c.item}</span>
+                    {c.related_claim && <span className="opacity-70"> (re: {c.related_claim})</span>}
+                    <span className="mt-1 block opacity-90">{c.why}</span>
+                    <span className="mt-1 block">
+                      <span className="text-sm lowercase text-accent-text">evidence needed: </span>
+                      {c.evidence_needed}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {report.verdict_after_checklist && (
+        <div>
+          <p className="mb-2 text-sm lowercase opacity-70">once done</p>
+          <h3 className={`big-title text-4xl sm:text-5xl ${verdictClass(report.verdict_after_checklist)}`}>
+            {report.verdict_after_checklist}
+          </h3>
+        </div>
+      )}
       <p className="text-sm opacity-70">
         Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
       </p>
@@ -129,7 +168,12 @@ export default function ReportView({ result }: { result: ReviewResult }) {
           items={risks.map((r) => ({
             label: r.issue,
             badge: <Badge level={r.rating} />,
-            body: <p className="text-sm lowercase">{r.type}</p>,
+            body: (
+              <p className="text-sm lowercase">
+                {r.type}
+                {r.fixable_by_evidence && " · fixable with evidence"}
+              </p>
+            ),
           }))}
         />
       </Section>

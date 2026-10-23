@@ -4,7 +4,7 @@ export const Rating = z.enum(["High", "Medium", "Low"]);
 
 export const Claim = z.object({
   claim: z.string(),
-  evidence_status: z.enum(["Sourced", "Weak", "Missing"]),
+  evidence_status: z.enum(["Sourced", "Weak", "Missing", "Not checked"]),
   risk: Rating,
   notes: z.string().default(""),
   source_ref: z.string().nullable().default(null),
@@ -19,6 +19,15 @@ export const Risk = z.object({
   issue: z.string(),
   rating: Rating,
   type: z.enum(["regulatory", "reputational", "audience"]),
+  // True if holding the right evidence or sign-off would remove this risk.
+  fixable_by_evidence: z.boolean().default(false),
+});
+
+export const ChecklistItem = z.object({
+  item: z.string(),
+  related_claim: z.string().nullable().default(null),
+  why: z.string(),
+  evidence_needed: z.string(),
 });
 
 export const Fix = z.object({
@@ -40,10 +49,13 @@ export const Report = z.object({
   attacks: z.array(Attack).default([]),
   risks: z.array(Risk).default([]),
   fixes: z.array(Fix).default([]),
+  checklist: z.array(ChecklistItem).default([]),
   working: z.array(z.string()).default([]),
   verdict: z.enum(VERDICTS),
   // The model's own verdict, kept when the code-computed verdict differs.
   model_verdict: z.enum(VERDICTS).optional(),
+  // Filled by the server: the verdict once every evidence-fixable risk is resolved.
+  verdict_after_checklist: z.enum(VERDICTS).optional(),
   legal_flags: z.array(z.string()).default([]),
   // Filled by the server, not the model.
   unverified_citations: z.array(z.string()).default([]),
@@ -56,6 +68,13 @@ export function computeVerdict(risks: { rating: string; type: string }[]): (type
   if (risks.some((r) => r.rating === "High")) return "Needs changes";
   if (risks.some((r) => r.rating === "Medium")) return "Ready with minor fixes";
   return "Ready";
+}
+
+/** Same rules as computeVerdict, ignoring risks that holding the right evidence would remove. */
+export function computeVerdictAfterChecklist(
+  risks: { rating: string; type: string; fixable_by_evidence?: boolean }[],
+): (typeof VERDICTS)[number] {
+  return computeVerdict(risks.filter((r) => !r.fixable_by_evidence));
 }
 
 export interface Usage {

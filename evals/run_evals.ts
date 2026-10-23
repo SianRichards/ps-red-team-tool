@@ -22,6 +22,7 @@ const MIME: Record<string, string> = {
 interface Expected {
   must_flag: string[];
   expected_verdict: string;
+  expected_verdict_after_checklist?: string;
   campaign?: string;
   placement?: string;
   audience?: string;
@@ -143,6 +144,7 @@ async function main() {
       const caught = exp.must_flag.map(() => 0);
       const runRows: any[] = [];
       let verdictOk = 0;
+      let afterOk = 0;
       let ok = 0;
       let judged = 0;
       let judgeErrors = 0;
@@ -157,14 +159,16 @@ async function main() {
         }
         ok++;
         if (res.report.verdict === exp.expected_verdict) verdictOk++;
+        if (res.report.verdict_after_checklist === exp.expected_verdict_after_checklist) afterOk++;
         const u: Usage = res.usage;
         const row: any = {
           verdict: res.report.verdict,
+          verdict_after_checklist: res.report.verdict_after_checklist ?? null,
           model_verdict: res.report.model_verdict ?? null,
           usage: u,
           report: res.report,
         };
-        let line = `  run ${i + 1}: ${res.report.verdict} | `;
+        let line = `  run ${i + 1}: ${res.report.verdict} -> ${res.report.verdict_after_checklist} | `;
         try {
           const j = await judge(ai, res.report, exp.must_flag);
           j.caught.forEach((c, k) => c && caught[k]++);
@@ -190,6 +194,9 @@ async function main() {
         runs,
         expected_verdict: exp.expected_verdict,
         verdict_match_rate: ok ? verdictOk / ok : null,
+        expected_verdict_after_checklist: exp.expected_verdict_after_checklist ?? null,
+        verdict_after_checklist_match_rate:
+          ok && exp.expected_verdict_after_checklist ? afterOk / ok : null,
         must_flag: exp.must_flag.map((item, k) => ({ item, catch_rate: judged ? caught[k] / judged : null })),
         avg_completion_tokens: avg(good.map((r) => r.usage.completion_tokens)),
         avg_cost: avg(good.map((r) => r.usage.cost ?? 0)),
@@ -202,6 +209,7 @@ async function main() {
         "ok/runs": `${ok}/${runs}`,
         "judge_error": judgeErrors,
         verdict: ok ? pct(verdictOk, ok) : "-",
+        "after checklist": ok && exp.expected_verdict_after_checklist ? pct(afterOk, ok) : "-",
         "issues caught": judged ? pct(caught.reduce((a, b) => a + b, 0), judged * exp.must_flag.length) : "-",
         "avg out tok": Math.round(summary.avg_completion_tokens),
         "avg cost": `$${summary.avg_cost.toFixed(4)}`,
