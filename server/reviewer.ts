@@ -62,6 +62,7 @@ Tabs (each audience appears once; do not repeat points across tabs):
 - public: the general public, supporters and the press. Items are likely reactions.
 - industry: the industry, trade bodies and critics. Items are likely reactions.
 - Each problem appears once, in the most relevant tab. If the industry will attack a claim the ASA might also judge, put the regulatory item in regulators and only the attack and reply in industry.
+- Regulators-tab items, and any item that cites a CAP/BCAP rule, must be "reword", "hold evidence", "get approval" or "rethink", never "prepare response". If a CAP breach is likely and can't be fixed by rewording or evidence, use "rethink".
 - Public and industry items are mostly "prepare response" (likely_attack and suggested_reply), plus "reword" where a change would avoid the attack. They are anticipated reactions, not predictions. Keep them specific to this ad. If there is nothing specific to say, return an empty items list.
 
 Evidence and approval rules:
