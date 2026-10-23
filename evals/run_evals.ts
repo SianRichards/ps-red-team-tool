@@ -83,13 +83,7 @@ function reportText(r: Report): string {
 }
 
 async function judge(ai: OpenAI, report: Report, items: string[]): Promise<{ caught: boolean[]; cost: number }> {
-  const resp = await ai.chat.completions.create({
-    model: JUDGE_MODEL,
-    max_tokens: 500,
-    messages: [
-      {
-        role: "user",
-        content: `You are grading an ad review. For each expected issue, decide whether the review clearly flags it (same substance, wording may differ).
+  const prompt = `You are grading an ad review. For each expected issue, decide whether the review clearly flags it (same substance, wording may differ).
 
 <review>
 ${reportText(report)}
@@ -98,19 +92,33 @@ ${reportText(report)}
 Expected issues:
 ${items.map((x, i) => `${i + 1}. ${x}`).join("\n")}
 
-Reply with only JSON: {"caught": [true|false, ...]} with exactly ${items.length} booleans, in order.`,
-      },
-    ],
-    usage: { include: true },
-  } as any);
-  const raw = resp.choices[0]?.message?.content ?? "";
-  const m = raw.match(/\{[\s\S]*\}/);
-  const arr = m ? JSON.parse(m[0]).caught : [];
-  return {
-    caught: items.map((_, i) => arr[i] === true),
-    cost: (resp.usage as any)?.cost ?? 0,
-  };
+Reply with only JSON: {"caught": [true|false, ...]} with exactly ${items.length} booleans, in order.`;
+  let cost = 0;
+  let lastErr = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await ai.chat.completions.create({
+        model: JUDGE_MODEL,
+        max_tokens: 4000, // headroom: the judge model spends hidden reasoning tokens before answering
+        response_format: { type: "json_object" },
+        messages: [{ role: "user", content: prompt }],
+        usage: { include: true },
+      } as any);
+      cost += (resp.usage as any)?.cost ?? 0;
+      const raw = resp.choices[0]?.message?.content ?? "";
+      const m = raw.match(/\{[\s\S]*\}/);
+      const arr = m ? JSON.parse(m[0]).caught : null;
+      if (!Array.isArray(arr) || arr.length !== items.length || arr.some((x: unknown) => typeof x !== "boolean"))
+        throw new Error(`unexpected judge output (finish_reason ${resp.choices[0]?.finish_reason}): ${raw.slice(0, 200)}`);
+      return { caught: arr, cost };
+    } catch (e) {
+      lastErr = (e as Error).message;
+    }
+  }
+  throw new JudgeError(lastErr);
 }
+
+class JudgeError extends Error {}
 
 const pct = (n: number, d: number) => `${Math.round((100 * n) / d)}%`;
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -136,38 +144,53 @@ async function main() {
       const runRows: any[] = [];
       let verdictOk = 0;
       let ok = 0;
+      let judged = 0;
+      let judgeErrors = 0;
       for (let i = 0; i < runs; i++) {
+        let res;
         try {
-          const res = await runReview({ ...req, model, effort }, { save: false });
-          const j = await judge(ai, res.report, exp.must_flag);
-          j.caught.forEach((c, k) => c && caught[k]++);
-          if (res.report.verdict === exp.expected_verdict) verdictOk++;
-          ok++;
-          const u: Usage = res.usage;
-          runRows.push({
-            verdict: res.report.verdict,
-            model_verdict: res.report.model_verdict ?? null,
-            caught: j.caught,
-            usage: u,
-            judge_cost: j.cost,
-          });
-          console.log(
-            `  run ${i + 1}: ${res.report.verdict} | caught ${j.caught.filter(Boolean).length}/${j.caught.length} | ${u.completion_tokens} out tokens | $${(u.cost ?? 0).toFixed(4)}`,
-          );
+          res = await runReview({ ...req, model, effort }, { save: false });
         } catch (e) {
           console.log(`  run ${i + 1} failed: ${(e as Error).message}`);
           runRows.push({ error: (e as Error).message });
+          continue;
         }
+        ok++;
+        if (res.report.verdict === exp.expected_verdict) verdictOk++;
+        const u: Usage = res.usage;
+        const row: any = {
+          verdict: res.report.verdict,
+          model_verdict: res.report.model_verdict ?? null,
+          usage: u,
+          report: res.report,
+        };
+        let line = `  run ${i + 1}: ${res.report.verdict} | `;
+        try {
+          const j = await judge(ai, res.report, exp.must_flag);
+          j.caught.forEach((c, k) => c && caught[k]++);
+          judged++;
+          row.caught = j.caught;
+          row.judge_cost = j.cost;
+          line += `caught ${j.caught.filter(Boolean).length}/${j.caught.length}`;
+        } catch (e) {
+          judgeErrors++;
+          row.judge_error = (e as Error).message;
+          line += "judge_error";
+        }
+        runRows.push(row);
+        console.log(`${line} | ${u.completion_tokens} out tokens | $${(u.cost ?? 0).toFixed(4)}`);
       }
       const good = runRows.filter((r) => !r.error);
       const summary = {
         case: name,
         effort,
         runs_ok: ok,
+        runs_judged: judged,
+        judge_errors: judgeErrors,
         runs,
         expected_verdict: exp.expected_verdict,
         verdict_match_rate: ok ? verdictOk / ok : null,
-        must_flag: exp.must_flag.map((item, k) => ({ item, catch_rate: ok ? caught[k] / ok : null })),
+        must_flag: exp.must_flag.map((item, k) => ({ item, catch_rate: judged ? caught[k] / judged : null })),
         avg_completion_tokens: avg(good.map((r) => r.usage.completion_tokens)),
         avg_cost: avg(good.map((r) => r.usage.cost ?? 0)),
         runs_detail: runRows,
@@ -177,13 +200,14 @@ async function main() {
         case: name,
         effort,
         "ok/runs": `${ok}/${runs}`,
+        "judge_error": judgeErrors,
         verdict: ok ? pct(verdictOk, ok) : "-",
-        "issues caught": ok ? pct(caught.reduce((a, b) => a + b, 0), ok * exp.must_flag.length) : "-",
+        "issues caught": judged ? pct(caught.reduce((a, b) => a + b, 0), judged * exp.must_flag.length) : "-",
         "avg out tok": Math.round(summary.avg_completion_tokens),
         "avg cost": `$${summary.avg_cost.toFixed(4)}`,
       });
       exp.must_flag.forEach((item, k) =>
-        console.log(`    ${ok ? pct(caught[k], ok).padStart(4) : "   -"}  ${item}`),
+        console.log(`    ${judged ? pct(caught[k], judged).padStart(4) : "   -"}  ${item}`),
       );
     }
   }

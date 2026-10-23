@@ -64,7 +64,9 @@ export async function loadReferenceDocs(): Promise<Record<string, string>> {
   const docs: Record<string, string> = {};
   let names: string[] = [];
   try {
-    names = (await fs.readdir(REFERENCE_DIR)).sort();
+    names = (await fs.readdir(REFERENCE_DIR, { recursive: true }))
+      .map((n) => n.split(path.sep).join("/"))
+      .sort();
   } catch {}
   for (const name of names) {
     const ext = path.extname(name).toLowerCase();
@@ -126,8 +128,8 @@ function extractJson(raw: string): unknown {
 export function checkCitations(report: Report, docs: Record<string, string>): string[] {
   const problems = new Set<string>();
   for (const c of report.claims) {
-    if (c.source_ref && !(c.source_ref in docs))
-      problems.add(`source_ref '${c.source_ref}' does not match any file in reference/`);
+    if (c.source_ref && !(c.source_ref.replaceAll("\\", "/") in docs))
+      problems.add(`source_ref '${c.source_ref}' does not match any file in reference/ (use the relative path, e.g. rulings/peta-2023-08.md)`);
   }
   const corpus = Object.values(docs).join("\n").toLowerCase();
   const texts = [
