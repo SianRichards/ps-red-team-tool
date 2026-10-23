@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import type { Report, ReviewResult } from "../shared/schema";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { TAB_KEYS, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
 
 const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 const BADGE = {
@@ -8,24 +8,42 @@ const BADGE = {
   Low: "border border-fg text-fg",
 } as const;
 
-function Badge({ level }: { level: keyof typeof BADGE }) {
+const TABS: Record<TabKey, { label: string; who: string; note?: string }> = {
+  regulators: { label: "Regulators", who: "ASA, CAP and media owners" },
+  public: {
+    label: "Public & press",
+    who: "The public, supporters and the press",
+    note: "Likely reactions, based on the ad's content. Not tested against real responses.",
+  },
+  industry: {
+    label: "Industry & critics",
+    who: "Industry, trade bodies and critics",
+    note: "Likely reactions, based on the ad's content. Not tested against real responses.",
+  },
+};
+
+const TODO_GROUPS: { type: Todo["type"]; heading: string }[] = [
+  { type: "hold evidence", heading: "Hold evidence" },
+  { type: "reword", heading: "Reword" },
+  { type: "get sign-off", heading: "Get sign-off" },
+  { type: "prepare response", heading: "Prepare a response" },
+];
+
+function Badge({ level }: { level: keyof typeof BADGE | null }) {
+  if (!level) return <span className="inline-block border border-fg/60 px-3 py-0.5 text-sm opacity-70">No issues</span>;
   return (
     <span className={`inline-block rounded-full px-3 py-0.5 text-sm font-semibold ${BADGE[level]}`}>{level}</span>
   );
 }
 
 function Tag({ children }: { children: ReactNode }) {
-  return (
-    <span className="ml-1 inline-block whitespace-nowrap border border-fg px-2 py-0.5 text-xs lowercase">
-      {children}
-    </span>
-  );
+  return <span className="ml-1 inline-block whitespace-nowrap border border-fg px-2 py-0.5 text-xs">{children}</span>;
 }
 
 function RuleTags({ rules }: { rules: string[] }) {
   if (!rules.length) return null;
   return (
-    <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
+    <span className="inline-flex flex-wrap gap-1 align-middle">
       {rules.map((r) => (
         <span key={r} className="whitespace-nowrap bg-fg/10 px-1.5 py-0.5 text-xs text-fg/60">
           {r}
@@ -35,36 +53,26 @@ function RuleTags({ rules }: { rules: string[] }) {
   );
 }
 
-function Section({
-  title,
-  index,
-  children,
-  open = false,
-}: {
-  title: string;
-  index: number;
-  children: ReactNode;
-  open?: boolean;
-}) {
+function Section({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
   return (
     <details open={open} className="panel border border-fg">
-      <summary className="select-none px-5 py-3 text-sm font-semibold lowercase">
+      <summary className="select-none px-5 py-3 text-sm font-semibold">
         <span aria-hidden className="mr-2 inline-block h-2 w-2 bg-red align-middle" />
-        {title} {String(index).padStart(2, "0")}
+        {title}
       </summary>
       <div className="overflow-x-auto px-5 pb-5 pt-2">{children}</div>
     </details>
   );
 }
 
-function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[]; high?: boolean }[] }) {
+function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[] }[] }) {
   if (!rows.length) return <p className="opacity-70">None.</p>;
   return (
     <table className="w-full text-left text-[15px]">
       <thead>
         <tr className="border-b border-fg">
           {head.map((h) => (
-            <th key={h} className="px-3 py-2 text-sm font-semibold lowercase">
+            <th key={h} className="px-3 py-2 text-sm font-semibold">
               {h}
             </th>
           ))}
@@ -72,7 +80,7 @@ function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[]; hig
       </thead>
       <tbody>
         {rows.map((r, i) => (
-          <tr key={i} className={`border-b border-fg/60 align-top ${r.high ? "font-medium" : ""}`}>
+          <tr key={i} className="border-b border-fg/60 align-top">
             {r.cells.map((c, j) => (
               <td key={j} className="px-3 py-2">
                 {c}
@@ -96,115 +104,235 @@ function List({ items }: { items: string[] }) {
   );
 }
 
-function Cards({ items }: { items: { label: string; badge?: ReactNode; body: ReactNode; dim?: boolean }[] }) {
-  if (!items.length) return <p className="opacity-70">None.</p>;
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {items.map((c, i) => (
-        <div key={i} className={`flex flex-col gap-3 border border-fg p-4 text-[15px] ${c.dim ? "opacity-60" : ""}`}>
-          <div className="flex items-start justify-between gap-3">
-            <p className="font-semibold">{c.label}</p>
-            {c.badge}
-          </div>
-          <div className="space-y-2 opacity-90">{c.body}</div>
-        </div>
-      ))}
-    </div>
-  );
+function Label({ children }: { children: ReactNode }) {
+  return <span className="block text-sm text-accent-text">{children}</span>;
 }
 
-function verdictClass(v: NonNullable<Report["verdict"]>) {
-  if (v === "High risk, get legal review") return "text-fg";
+function verdictClass(v: Report["verdict"]) {
   if (v === "Needs changes" || v === "Ready with minor fixes") return "text-accent-text";
   return "text-fg";
 }
 
+function sortIssues(issues: Issue[]) {
+  // Highest rating first; within a rating, issues covered by a hold-evidence to-do come last.
+  return [...issues].sort(
+    (a, b) =>
+      RATING_ORDER[a.rating] - RATING_ORDER[b.rating] || Number(a.fixable_by_evidence) - Number(b.fixable_by_evidence),
+  );
+}
+
+function IssueCard({ issue }: { issue: Issue }) {
+  return (
+    <div className={`flex flex-col gap-2 border border-fg p-4 text-[15px] ${issue.fixable_by_evidence ? "opacity-60" : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-semibold">{issue.title}</p>
+        <Badge level={issue.rating} />
+      </div>
+      {issue.ad_quote && (
+        <blockquote className="border-l-2 border-accent-text pl-3 italic">“{issue.ad_quote}”</blockquote>
+      )}
+      <p className="opacity-90">{issue.detail}</p>
+      {(issue.rules.length > 0 || issue.fixable_by_evidence) && (
+        <p>
+          <RuleTags rules={issue.rules} />
+          {issue.fixable_by_evidence && <Tag>Covered by checklist</Tag>}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function TodoCard({ todo, titles }: { todo: Todo; titles: Map<string, string> }) {
+  const about = todo.issue_ids.map((id) => titles.get(id)).filter(Boolean) as string[];
+  return (
+    <li className="border border-fg p-4 text-[15px]">
+      <label className="flex items-start gap-3">
+        <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
+        <span className="block space-y-1.5">
+          <span className="block font-medium">
+            {todo.action}
+            {todo.where && <Tag>{todo.where}</Tag>}
+          </span>
+          {about.length > 0 && <span className="block text-sm opacity-70">About: {about.join("; ")}</span>}
+          {todo.detail && <span className="block opacity-90">{todo.detail}</span>}
+          {todo.suggested_wording && (
+            <span className="block">
+              <Label>Suggested wording</Label>
+              {todo.suggested_wording}
+            </span>
+          )}
+          {todo.likely_attack && (
+            <span className="block">
+              <Label>Likely attack</Label>
+              {todo.likely_attack}
+            </span>
+          )}
+          {todo.suggested_reply && (
+            <span className="block">
+              <Label>Suggested reply</Label>
+              {todo.suggested_reply}
+            </span>
+          )}
+          {todo.rules.length > 0 && (
+            <span className="block">
+              <RuleTags rules={todo.rules} />
+            </span>
+          )}
+        </span>
+      </label>
+    </li>
+  );
+}
+
+function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
+  const tab = report.tabs[tabKey];
+  const issues = sortIssues(tab.issues);
+  const titles = new Map(Object.values(report.tabs).flatMap((t) => t.issues.map((i) => [i.id, i.title] as const)));
+  const { note } = TABS[tabKey];
+  return (
+    <div className="space-y-8">
+      {note && <p className="text-sm opacity-70">{note}</p>}
+
+      <section>
+        <h3 className="mb-2 font-semibold">Overall assessment</h3>
+        <p className="max-w-2xl text-[15px]">{tab.assessment}</p>
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-semibold">Problems</h3>
+        {issues.length ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {issues.map((i) => (
+              <IssueCard key={i.id} issue={i} />
+            ))}
+          </div>
+        ) : (
+          <p className="opacity-70">No problems found for this audience.</p>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-3 font-semibold">What to do</h3>
+        {tab.todo.length ? (
+          <div className="space-y-6">
+            {TODO_GROUPS.map(({ type, heading }) => {
+              const items = tab.todo.filter((d) => d.type === type);
+              if (!items.length) return null;
+              return (
+                <div key={type}>
+                  <h4 className="mb-1 text-sm font-semibold text-accent-text">{heading}</h4>
+                  {type === "hold evidence" && (
+                    <p className="mb-3 max-w-2xl text-[15px] opacity-90">
+                      You don't need these on the ad. Keep them on file before launch and be ready to send them to the
+                      ASA if asked. For posters, putting supporting detail on your website counts in your favour, but
+                      it can't fix a headline that's misleading without a caveat.
+                    </p>
+                  )}
+                  <ul className="space-y-4">
+                    {items.map((d, i) => (
+                      <TodoCard key={i} todo={d} titles={titles} />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="opacity-70">Nothing to do for this audience.</p>
+        )}
+      </section>
+
+      {tabKey === "regulators" && (
+        <div className="space-y-4">
+          <Section title="Claims checked">
+            <Table
+              head={["Claim", "Kind", "Evidence", "Notes", "Source"]}
+              rows={report.tabs.regulators.claims.map((c) => ({
+                cells: [
+                  c.claim,
+                  <Tag key="k">{c.claim_kind}</Tag>,
+                  c.evidence_status,
+                  <>
+                    {c.notes} <RuleTags rules={c.rules} />
+                  </>,
+                  c.source_ref ?? "-",
+                ],
+              }))}
+            />
+          </Section>
+          {report.tabs.regulators.legal_flags.length > 0 && (
+            <Section title="Other legal checks" open>
+              <List items={report.tabs.regulators.legal_flags} />
+            </Section>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ReportView({ result }: { result: ReviewResult }) {
   const { report } = result;
-  // Highest rating first; within a rating, risks the checklist covers come last.
-  const risks = [...report.risks].sort(
-    (a, b) =>
-      RATING_ORDER[a.rating] - RATING_ORDER[b.rating] ||
-      Number(a.fixable_by_evidence) - Number(b.fixable_by_evidence),
-  );
-  const remaining = risks.filter((r) => !r.fixable_by_evidence);
+  const [active, setActive] = useState<TabKey>("regulators");
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  if (!report?.tabs) {
+    return (
+      <p className="border border-fg p-4 text-[15px]">
+        This review is in an older format and can't be shown. Re-run the review.
+      </p>
+    );
+  }
+
+  function onKeyDown(e: KeyboardEvent, i: number) {
+    const last = TAB_KEYS.length - 1;
+    const next =
+      e.key === "ArrowRight" ? (i === last ? 0 : i + 1) : e.key === "ArrowLeft" ? (i === 0 ? last : i - 1) : e.key === "Home" ? 0 : e.key === "End" ? last : null;
+    if (next === null) return;
+    e.preventDefault();
+    setActive(TAB_KEYS[next]);
+    tabRefs.current[TAB_KEYS[next]]?.focus();
+  }
+
+  const summaryRows = TAB_KEYS.map((k) => {
+    const issues = sortIssues(report.tabs[k].issues);
+    return { key: k, rating: tabRating(report.tabs[k].issues), top: issues[0]?.title ?? null, count: issues.length };
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="border-t border-fg pt-6">
-        <p className="mb-2 text-sm lowercase opacity-70">as it stands</p>
+        <p className="mb-2 text-sm opacity-70">As it stands</p>
         <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(report.verdict)}`}>{report.verdict}</h2>
-        <p className="mt-4 max-w-2xl text-[15px]">{report.summary}</p>
-        {risks.length > 0 && (
-          <div className="mt-4 max-w-2xl">
-            <p className="mb-1 text-sm lowercase opacity-70">main reasons</p>
-            <List items={risks.slice(0, 3).map((r) => r.issue)} />
+        {report.verdict_after_checklist && (
+          <div className="mt-6">
+            <p className="mb-1 text-sm opacity-70">Once done</p>
+            <h3 className={`big-title text-4xl sm:text-5xl ${verdictClass(report.verdict_after_checklist)}`}>
+              {report.verdict_after_checklist}
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm opacity-70">
+              The verdict if all the evidence on the checklist is in place. Problems that need rewording stay.
+            </p>
           </div>
         )}
+        <p className="mt-6 max-w-2xl text-[15px]">{report.summary}</p>
+        <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">
+          {summaryRows.map((r) => (
+            <li key={r.key} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
+              <button className="w-40 text-left font-semibold underline-offset-4 hover:underline" onClick={() => setActive(r.key)}>
+                {TABS[r.key].label}
+              </button>
+              <Badge level={r.rating} />
+              <span className="min-w-0 flex-1 opacity-90">{r.top ?? ""}</span>
+            </li>
+          ))}
+        </ul>
         {report.model_verdict && (
           <p className="mt-2 text-sm opacity-70">
-            Verdict is computed from the risk ratings. The model's own verdict was "{report.model_verdict}".
+            Verdict is computed from the issue ratings. The model's own verdict was "{report.model_verdict}".
           </p>
         )}
-      </div>
-
-      {report.checklist.length > 0 && (
-        <div className="border border-fg p-5">
-          <p className="mb-2 text-sm font-semibold lowercase">to lower the risk, make sure you have:</p>
-          <p className="mb-4 max-w-2xl text-[15px] opacity-90">
-            You don't need these on the ad. Keep them on file before launch and be ready to send them to the ASA if
-            asked. For posters, putting supporting detail on your website counts in your favour, but it can't fix a
-            headline that's misleading without a caveat.
-          </p>
-          <ul className="space-y-4 text-[15px]">
-            {report.checklist.map((c, i) => (
-              <li key={i}>
-                <label className="flex items-start gap-3">
-                  <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
-                  <span className="space-y-2">
-                    <span className="block">
-                      <span className="font-medium">{c.item}</span>
-                      {c.related_claim && <span className="opacity-70"> (re: {c.related_claim})</span>}{" "}
-                      <Tag>{c.where}</Tag>
-                    </span>
-                    <span className="block">
-                      <span className="block text-sm lowercase text-accent-text">why</span>
-                      {c.why}
-                    </span>
-                    <span className="block">
-                      <span className="block text-sm lowercase text-accent-text">evidence needed</span>
-                      {c.evidence_needed}
-                    </span>
-                    <RuleTags rules={c.rules} />
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {report.verdict_after_checklist && (
-        <div className="border-t border-fg pt-6">
-          <p className="mb-2 text-sm lowercase opacity-70">once done</p>
-          <h3 className={`big-title text-4xl sm:text-5xl ${verdictClass(report.verdict_after_checklist)}`}>
-            {report.verdict_after_checklist}
-          </h3>
-          <div className="mt-4 max-w-2xl">
-            {remaining.length > 0 ? (
-              <>
-                <p className="mb-1 text-sm lowercase opacity-70">remaining risks</p>
-                <List items={remaining.slice(0, 3).map((r) => r.issue)} />
-              </>
-            ) : (
-              <p className="text-[15px]">No remaining risks once the checklist is done.</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="border-t border-fg pt-6">
-        <h3 className="text-sm font-semibold lowercase">full report</h3>
-        <p className="mt-2 text-sm opacity-70">
+        <p className="mt-4 text-sm opacity-70">
           Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
         </p>
       </div>
@@ -216,60 +344,49 @@ export default function ReportView({ result }: { result: ReviewResult }) {
         </div>
       )}
 
-      <Section title="risks" index={1} open>
-        <Cards
-          items={risks.map((r) => ({
-            label: r.issue,
-            badge: <Badge level={r.rating} />,
-            dim: r.fixable_by_evidence,
-            body: (
-              <p className="text-sm lowercase">
-                {r.type}
-                <RuleTags rules={r.rules} />
-                {r.fixable_by_evidence && (
-                  <>
-                    {" "}
-                    <Tag>covered by checklist</Tag>
-                  </>
-                )}
-              </p>
-            ),
-          }))}
-        />
-      </Section>
-      <Section title="claims" index={2} open>
-        <Table
-          head={["Claim", "Kind", "Evidence", "Risk", "Notes", "Source"]}
-          rows={report.claims.map((c) => ({
-            cells: [c.claim, <Tag>{c.claim_kind}</Tag>, c.evidence_status, <Badge level={c.risk} />, <>{c.notes}<RuleTags rules={c.rules} /></>, c.source_ref ?? "-"],
-            high: c.risk === "High",
-          }))}
-        />
-      </Section>
-      <Section title="attacks" index={3}>
-        <Table head={["Critic", "Quote"]} rows={report.attacks.map((a) => ({ cells: [a.critic, a.quote] }))} />
-      </Section>
-      <Section title="fixes" index={4} open>
-        <Cards
-          items={report.fixes.map((f) => ({
-            label: f.issue,
-            body: (
-              <>
-                <p>{f.fix}</p>
-                <p>
-                  <span className="text-sm lowercase text-accent-text">sharpest defensible version: </span>
-                  {f.sharpest_defensible_version}
-                </p>
-              </>
-            ),
-          }))}
-        />
-      </Section>
-      <Section title="what's working" index={5}>
+      <div>
+        <div role="tablist" aria-label="Audiences" className="flex flex-wrap border-b border-fg">
+          {TAB_KEYS.map((k, i) => {
+            const row = summaryRows[i];
+            const selected = active === k;
+            return (
+              <button
+                key={k}
+                ref={(el) => {
+                  tabRefs.current[k] = el;
+                }}
+                role="tab"
+                id={`tab-${k}`}
+                aria-selected={selected}
+                aria-controls={`panel-${k}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActive(k)}
+                onKeyDown={(e) => onKeyDown(e, i)}
+                className={`flex items-center gap-2 border border-b-0 px-4 py-2 text-[15px] font-semibold ${
+                  selected ? "border-fg bg-fg/10" : "border-transparent hover:border-fg/60"
+                }`}
+              >
+                {TABS[k].label}
+                <Badge level={row.rating} />
+                <span className="text-sm font-normal opacity-70">{row.count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div
+          role="tabpanel"
+          id={`panel-${active}`}
+          aria-labelledby={`tab-${active}`}
+          tabIndex={0}
+          className="pt-6 focus-visible:outline-offset-4"
+        >
+          <p className="mb-6 text-sm opacity-70">{TABS[active].who}</p>
+          <TabPanel tabKey={active} report={report} />
+        </div>
+      </div>
+
+      <Section title="What's working" open>
         <List items={report.working} />
-      </Section>
-      <Section title="legal flags" index={6} open={report.legal_flags.length > 0}>
-        <List items={report.legal_flags} />
       </Section>
     </div>
   );

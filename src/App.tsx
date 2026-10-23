@@ -77,34 +77,34 @@ export default function App() {
         <header className="flex items-baseline justify-between border-b border-red pb-3">
           <span className="font-semibold lowercase">campaign red team</span>
           <span className="flex items-baseline gap-4">
-            <span className="hidden text-sm lowercase opacity-70 sm:inline">review draft materials before launch</span>
+            <span className="hidden text-sm opacity-70 sm:inline">Review draft materials before launch</span>
             <button
               ref={aboutBtn}
               onClick={() => setAboutOpen(true)}
-              className="text-sm lowercase underline-offset-4 hover:underline"
+              className="text-sm underline-offset-4 hover:underline"
             >
-              about
+              About
             </button>
             <button
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              className="rounded-full border border-fg px-3 py-0.5 text-sm lowercase hover:bg-fg hover:text-page"
+              className="rounded-full border border-fg px-3 py-0.5 text-sm hover:bg-fg hover:text-page"
             >
-              {theme === "dark" ? "light mode" : "dark mode"}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
             </button>
           </span>
         </header>
 
         <div className="flex flex-1 flex-col gap-10 py-10 lg:flex-row">
           <aside className="w-full shrink-0 lg:w-64">
-            <h2 className="big-title mb-6 text-5xl">red team</h2>
+            <h2 className="big-title lowercase mb-6 text-5xl">red team</h2>
             <div className="divide-y divide-fg border-y border-fg [&>label]:block [&>label]:py-3">
-              <label className="text-sm lowercase">
-                campaign name
+              <label className="text-sm">
+                Campaign name
                 <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
               </label>
-              <label className="text-sm lowercase">
-                placement
+              <label className="text-sm">
+                Placement
                 <input
                   className={field}
                   placeholder="e.g. Instagram, public transportation"
@@ -112,32 +112,32 @@ export default function App() {
                   onChange={(e) => setPlacement(e.target.value)}
                 />
               </label>
-              <label className="text-sm lowercase">
-                target audience
+              <label className="text-sm">
+                Target audience
                 <input className={field} placeholder="e.g. young adults, commuters" value={audience} onChange={(e) => setAudience(e.target.value)} />
               </label>
-              <label className="text-sm lowercase">
-                model
+              <label className="text-sm">
+                Model
                 <select className={field} value={model} onChange={(e) => setModel(e.target.value as ModelChoice)}>
                   <option value="default">Sonnet (default)</option>
                   <option value="deep">Opus (deep review)</option>
                 </select>
                 {config && <span className="text-sm opacity-70">{config.models[model]}</span>}
               </label>
-              <label className="text-sm lowercase">
-                effort
+              <label className="text-sm">
+                Effort
                 <select className={field} value={effort} onChange={(e) => setEffort(e.target.value as Effort)}>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
                 </select>
               </label>
             </div>
           </aside>
 
           <main className="min-w-0 flex-1 space-y-6">
-            <label className="block text-sm lowercase">
-              paste text, script or video transcript
+            <label className="block text-sm">
+              Paste text, script or video transcript
               <textarea
                 className={`${field} panel h-48 border border-fg px-3`}
                 value={text}
@@ -149,7 +149,7 @@ export default function App() {
             <button
               onClick={run}
               disabled={loading}
-              className="rounded-full bg-red px-8 py-3 font-semibold lowercase text-white hover:bg-fg hover:text-page disabled:opacity-50"
+              className="rounded-full bg-red px-8 py-3 font-semibold text-white hover:bg-fg hover:text-page disabled:opacity-50"
             >
               {loading ? "Reviewing..." : "Run review"}
             </button>
@@ -163,7 +163,7 @@ export default function App() {
           </main>
         </div>
 
-        <footer className="text-right text-xs opacity-70">{result ? "report" : "new review"}</footer>
+        <footer className="text-right text-xs opacity-70">{result ? "Report" : "New review"}</footer>
       </div>
       <AboutPanel
         open={aboutOpen}

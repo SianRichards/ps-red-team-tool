@@ -5,9 +5,9 @@ import OpenAI from "openai";
 import { PDFParse } from "pdf-parse";
 import {
   Report,
-  computeVerdict,
+  COPY_ADVICE_TODO,
+  computeReportVerdict,
   computeVerdictAfterChecklist,
-  COPY_ADVICE_ITEM,
   type ReviewRequest,
   type ReviewResponse,
   type Usage,
@@ -32,30 +32,47 @@ Respond with a single JSON object and nothing else (no markdown fences, no comme
 Exact shape:
 {
   "summary": string,
-  "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "rules": [string], "source_ref": <exact reference doc name> or null}],
-  "attacks": [{"critic": "industry"|"asa"|"media"|"public"|"ad_owner", "quote": string}],
-  "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience", "fixable_by_evidence": boolean, "rules": [string]}],
-  "fixes": [{"issue": string, "fix": string, "sharpest_defensible_version": string}],
-  "checklist": [{"item": string, "where": "keep on file"|"keep on file + publish on website (recommended)"|"get sign-off", "related_claim": string or null, "why": string, "evidence_needed": string, "rules": [string]}],
+  "tabs": {
+    "regulators": {
+      "assessment": string,
+      "issues": [ISSUE],
+      "todo": [TODO],
+      "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "notes": string, "rules": [string], "source_ref": <exact reference doc name> or null}],
+      "legal_flags": [string]
+    },
+    "public": {"assessment": string, "issues": [ISSUE], "todo": [TODO]},
+    "industry": {"assessment": string, "issues": [ISSUE], "todo": [TODO]}
+  },
   "working": [string],
-  "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review",
-  "legal_flags": [string]
+  "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review"
 }
-Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort risks High first.
+ISSUE = {"id": string, "title": string, "detail": string, "rating": "High"|"Medium"|"Low", "ad_quote": the ad's exact words or null, "rules": [string], "fixable_by_evidence": boolean}
+TODO = {"action": string, "type": "hold evidence"|"reword"|"get sign-off"|"prepare response", "issue_ids": [string], "detail": string, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "rules": [string]}
 
-Evidence and checklist rules:
-- Assess the ad as submitted. Missing evidence counts as a risk, but set fixable_by_evidence = true on it and add a checklist item. Use evidence_status "Not checked" when no source has been provided.
+Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort issues High first.
+
+Tabs (each audience appears once; do not repeat points across tabs):
+- regulators: the ASA/CAP, and media owners (TfL, Global and similar). Media-owner concerns go here.
+- public: the general public, supporters and the press. Issues are likely reactions.
+- industry: the industry, trade bodies and critics. Issues are likely reactions.
+- Each issue appears once, in the most relevant tab. Todos refer to issues by issue_ids and do not restate them. Issue ids are unique across the whole report: r1, r2... for regulators, p1... for public, i1... for industry.
+- If the industry will attack a claim the ASA might also judge, put the regulatory issue in regulators and only the attack and reply in industry (a "prepare response" todo, plus an industry issue only if the attack is a separate point).
+- Public and industry issues are anticipated reactions, not predictions. Keep them specific to this ad. If there is nothing specific to say, return an empty issues list.
+- Todo fields: "where" only for "hold evidence" (else null). "suggested_wording" only for "reword": the sharpest defensible version. "likely_attack" and "suggested_reply" only for "prepare response". Unused fields are null.
+
+Evidence and todo rules:
+- Assess the ad as submitted. Missing evidence is an issue: set fixable_by_evidence = true (regulators tab only) and add a "hold evidence" todo. Use evidence_status "Not checked" when no source has been provided.
 - CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
-- If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the fix is rewording.
-- Distress, offence and imagery risks are never fixable by evidence (fixable_by_evidence = false).
-- Media-owner acceptance and legal sign-off are not CAP rules: leave "rules" empty on those checklist items (do not tag them CAP 1.8 or similar).
+- If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the todo is "reword".
+- Distress, offence and imagery issues are never fixable by evidence (fixable_by_evidence = false).
+- Only add a "hold evidence" or "get sign-off" todo if holding evidence or sign-off would fix the issue. A claim that needs rewording gets a "reword" todo only.
+- Media-owner acceptance (TfL, Global and similar) and legal review are "get sign-off" todos with empty rules. They are not CAP rules: do not tag them CAP 1.8 or similar.
+- Each "hold evidence" detail must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
 - Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
-- A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: set claim_kind "factual", not "rhetoric".
-- Risk type: any risk that could break a CAP rule (misleading, distress, offence, harm) is type "regulatory". Use "reputational" and "audience" only for risks no CAP rule covers (e.g. backlash, alienating supporters).
-- One risk per issue. Never combine an evidence problem (fixable_by_evidence = true) with a wording or caveat problem (false) in one risk; split them. Example: "90% stat needs a source" (true) vs "90% may only apply to England; the ad says UK" (false: reword or add a caveat on the ad). Only raise the wording or caveat risk if there is a real reason to suspect it, not as a generic possibility.
-- Only put an item on the checklist if holding evidence or sign-off would fix it. A claim that needs rewording goes in fixes only, never on the checklist.
-- Media-owner acceptance (TfL, Global and similar) is a checklist item, not a risk.
-- Each checklist item's evidence_needed must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
+- A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: claim_kind "factual", not "rhetoric".
+- One issue per problem. Never combine an evidence problem (fixable_by_evidence = true) with a wording or caveat problem (false) in one issue; split them. Example: "90% stat needs a source" (true) vs "90% may only apply to England; the ad says UK" (false: reword or add a caveat on the ad). Only raise the wording or caveat issue if there is a real reason to suspect it, not as a generic possibility.
+- Do not add a Copy Advice todo; the system adds it.
+- Use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; otherwise "keep on file".
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
 
 Plain English rules:
@@ -63,44 +80,33 @@ Plain English rules:
 - Name things specifically: quote the ad's exact words, and name the body or source (e.g. "the Animal Welfare Committee, which advises the government") rather than "the committee" or "the claim".
 - No generic hedging (e.g. "may be selective, out of context or outdated"). State the specific concern and why, or leave it out.
 - Say what to do, not just the rule. Example: "Check the quote matches the report word for word, and avoid wording that suggests the committee supports your campaign."
-- Never put rule numbers in sentences. Put them in the "rules" array on risks, claims and checklist items, in the form ["CAP 3.47", "CAP 3.52"] (empty array if none).
+- Never put rule numbers in sentences. Put them in the "rules" array on issues, claims and todos, in the form ["CAP 3.47", "CAP 3.52"] (empty array if none). Any regulators issue that could break a CAP rule (misleading, distress, offence, harm) must name that rule in "rules".
 
 CAP Section 3 focus. For campaign ads, apply only these rules and ignore the rest of Section 3 (prices, availability, competitor comparisons, reviews, guarantees):
 - Judge the overall impression and likely effect on viewers, not intent.
 - 3.1: the ad must not materially mislead.
 - 3.2: obvious rhetoric or exaggeration people won't take literally is allowed. Don't demand evidence for it (claim_kind "rhetoric").
 - 3.6: opinions ("cruel", "wrong") are fine if clearly opinion (claim_kind "opinion"). Flag only an opinion presented as fact.
-- 3.7: factual claims (claim_kind "factual") need evidence HELD before launch, not shown on the ad. Only factual claims get missing-evidence risks or checklist items.
+- 3.7: factual claims (claim_kind "factual") need evidence HELD before launch, not shown on the ad. Only factual claims get missing-evidence issues or "hold evidence" todos.
 - 3.3: for space-limited formats such as posters, supporting detail on the linked website counts in the advertiser's favour.
-- 3.9/3.10: if a claim is only accurate with a caveat (scope, region, date, "up to"), the caveat must be on the ad, clearly. A website can't fix a headline that is misleading without its caveat. This is a fix, not a checklist item.
+- 3.9/3.10: if a claim is only accurate with a caveat (scope, region, date, "up to"), the caveat must be on the ad, clearly. A website can't fix a headline that is misleading without its caveat. This is a "reword" todo, not "hold evidence".
 - 3.13: don't present contested science as settled; suggest attributing it ("X found...") instead.
 - 3.5: the ad must make clear who is behind it (name, logo or URL).
 - 3.47/3.50: quotes need proof they are genuine and accurate; quotes from published sources don't need permission.
 - 3.52: quoting a public body must not imply it endorses the campaign.
 - 3.51: never suggest saying the ad is ASA/CAP approved.
 - 3.23-3.26: apply only if the ad offers something "free".
-- Checklist "where": use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; "get sign-off" for approvals; otherwise "keep on file". Do not add a Copy Advice item; the system adds it.
+
+legal_flags: short "check with a lawyer if..." items (e.g. defamation if naming companies, charity campaigning rules, election-period rules). Only when relevant to this ad; otherwise an empty list.
 
 Length limits (strict):
-- summary: max 2 sentences.
+- summary: max 2 sentences. assessment: 2-3 sentences.
+- At most 5 issues per tab. issue.title: max 12 words. issue.detail: max 35 words.
+- todo.action: max 15 words. todo.detail, suggested_wording and suggested_reply: max 35 words each. likely_attack: max 25 words.
 - claims[].notes: max 20 words.
-- attacks[].quote: one line, max 25 words.
-- fixes[].fix and fixes[].sharpest_defensible_version: max 30 words each; do not restate the claim.
 - working: max 5 items, one line each.
 - No preamble, reasoning or any text outside the JSON object.
 `;
-
-const CAP_RULE = /B?CAP/i;
-
-/** A risk that cites a CAP/BCAP rule is a regulatory risk, whatever type the model gave it. */
-function normaliseRiskTypes(report: Report): Report {
-  return {
-    ...report,
-    risks: report.risks.map((r) =>
-      r.rules.some((x) => CAP_RULE.test(x)) ? { ...r, type: "regulatory" as const } : r,
-    ),
-  };
-}
 
 export class ReviewError extends Error {}
 
@@ -180,17 +186,20 @@ function extractJson(raw: string): unknown {
 /** Flags source_refs that match no reference file, and ruling names absent from the pack. */
 export function checkCitations(report: Report, docs: Record<string, string>): string[] {
   const problems = new Set<string>();
-  for (const c of report.claims) {
+  for (const c of report.tabs.regulators.claims) {
     if (c.source_ref && !(c.source_ref.replaceAll("\\", "/") in docs))
       problems.add(`source_ref '${c.source_ref}' does not match any file in reference/ (use the relative path, e.g. rulings/peta-2023-08.md)`);
   }
   const corpus = Object.values(docs).join("\n").toLowerCase();
   const texts = [
     report.summary,
-    ...report.claims.map((c) => c.notes),
-    ...report.legal_flags,
-    ...report.fixes.map((f) => f.fix),
-    ...report.risks.map((r) => r.issue),
+    ...report.tabs.regulators.claims.map((c) => c.notes),
+    ...report.tabs.regulators.legal_flags,
+    ...Object.values(report.tabs).flatMap((tab) => [
+      tab.assessment,
+      ...tab.issues.map((i) => i.detail),
+      ...tab.todo.map((d) => d.detail),
+    ]),
   ];
   const re = /ASA ruling (?:on|against)\s+([A-Z][\w&'.\- ]{2,60})/g;
   for (const t of texts)
@@ -258,17 +267,17 @@ export async function runReview(
       parsed = { ok: false, error: String(e) };
     }
     if (parsed.ok) {
-      parsed.data = normaliseRiskTypes(parsed.data);
-      const verdict = computeVerdict(parsed.data.risks);
-      const checklist = parsed.data.checklist.some((c) => /copy advice/i.test(c.item))
-        ? parsed.data.checklist
-        : [...parsed.data.checklist, { ...COPY_ADVICE_ITEM }];
+      const { tabs } = parsed.data;
+      const verdict = computeReportVerdict(tabs);
+      const todo = tabs.regulators.todo.some((d) => /copy advice/i.test(d.action))
+        ? tabs.regulators.todo
+        : [...tabs.regulators.todo, { ...COPY_ADVICE_TODO }];
       const report: Report = {
         ...parsed.data,
-        checklist,
+        tabs: { ...tabs, regulators: { ...tabs.regulators, todo } },
         verdict,
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
-        verdict_after_checklist: computeVerdictAfterChecklist(parsed.data.risks),
+        verdict_after_checklist: computeVerdictAfterChecklist(tabs),
         unverified_citations: checkCitations(parsed.data, docs),
       };
       const saved_as = opts.save === false ? "" : await saveReport(report, req, model, usage);

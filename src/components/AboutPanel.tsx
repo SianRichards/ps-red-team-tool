@@ -39,7 +39,7 @@ export default function AboutPanel({ open, onClose }: { open: boolean; onClose: 
           <span aria-hidden="true">×</span>
         </button>
         <h2 id="about-title" className="big-title mb-6 pr-10 text-4xl">
-          about this tool
+          About this tool
         </h2>
         <div className="space-y-5">
           <section>

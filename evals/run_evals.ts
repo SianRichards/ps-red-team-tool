@@ -74,13 +74,20 @@ async function loadCase(name: string): Promise<{ req: Omit<ReviewRequest, "effor
 }
 
 function reportText(r: Report): string {
-  return [
-    `Summary: ${r.summary}`,
-    ...r.risks.map((x) => `Risk (${x.rating}, ${x.type}): ${x.issue}`),
-    ...r.claims.map((c) => `Claim: ${c.claim} [${c.evidence_status}/${c.risk}] ${c.notes}`),
-    ...r.fixes.map((f) => `Fix for ${f.issue}: ${f.fix}`),
-    ...r.legal_flags.map((l) => `Legal flag: ${l}`),
-  ].join("\n");
+  const lines = [`Summary: ${r.summary}`];
+  for (const [name, tab] of Object.entries(r.tabs)) {
+    lines.push(`[${name}] ${tab.assessment}`);
+    for (const i of tab.issues)
+      lines.push(`Issue (${i.rating}, ${name}): ${i.title}. ${i.detail}${i.ad_quote ? ` Ad words: "${i.ad_quote}"` : ""}`);
+    for (const d of tab.todo) {
+      const extra = [d.suggested_wording, d.likely_attack, d.suggested_reply].filter(Boolean).join(" | ");
+      lines.push(`To do (${d.type}, ${name}): ${d.action}. ${d.detail}${extra ? ` ${extra}` : ""}`);
+    }
+  }
+  for (const c of r.tabs.regulators.claims)
+    lines.push(`Claim: ${c.claim} [${c.claim_kind}/${c.evidence_status}] ${c.notes}`);
+  for (const l of r.tabs.regulators.legal_flags) lines.push(`Legal flag: ${l}`);
+  return lines.join("\n");
 }
 
 async function judge(ai: OpenAI, report: Report, items: string[]): Promise<{ caught: boolean[]; cost: number }> {

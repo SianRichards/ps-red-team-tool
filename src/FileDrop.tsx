@@ -45,7 +45,7 @@ export default function FileDrop({ files, onChange }: { files: File[]; onChange:
           setOver(false);
           add(e.dataTransfer.files);
         }}
-        className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center text-sm lowercase transition-colors ${
+        className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center text-sm transition-colors ${
           over ? "border-red" : "border-fg/60 hover:border-fg"
         }`}
       >
@@ -62,7 +62,7 @@ export default function FileDrop({ files, onChange }: { files: File[]; onChange:
         >
           <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
         </svg>
-        <span>drop poster, key frames or a pdf here - or click to browse</span>
+        <span>Drop poster, key frames or a PDF here, or click to browse</span>
       </div>
       <input
         ref={input}
