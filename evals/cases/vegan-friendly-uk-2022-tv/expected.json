@@ -1,0 +1,10 @@
+{
+  "campaign": "Make the connection",
+  "placement": "Television",
+  "expected_verdict": "High risk, get legal review",
+  "must_flag": [
+    "The fast editing and close focus on animals, contrasted with people eating, make some clips likely to cause distress to viewers",
+    "At least one clip of animals or meat and fish preparation may be gratuitous, i.e. more graphic than the message needs",
+    "Content like this is likely to be unsuitable for TV, so scheduling restrictions (such as keeping it away from programmes for under-16s) may not be enough to make it acceptable"
+  ]
+}

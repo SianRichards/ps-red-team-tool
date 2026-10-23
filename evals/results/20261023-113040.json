@@ -1,0 +1,202 @@
+{
+  "timestamp": "20261023-113040",
+  "runs": 2,
+  "efforts": [
+    "medium"
+  ],
+  "judge_model": "anthropic/claude-haiku-5.5",
+  "results": [
+    {
+      "case": "vegan-friendly-uk-2022-tv",
+      "effort": "medium",
+      "runs_ok": 2,
+      "runs": 2,
+      "expected_verdict": "High risk, get legal review",
+      "verdict_match_rate": 1,
+      "must_flag": [
+        {
+          "item": "The fast editing and close focus on animals, contrasted with people eating, make some clips likely to cause distress to viewers",
+          "catch_rate": 0.5
+        },
+        {
+          "item": "At least one clip of animals or meat and fish preparation may be gratuitous, i.e. more graphic than the message needs",
+          "catch_rate": 0.5
+        },
+        {
+          "item": "Content like this is likely to be unsuitable for TV, so scheduling restrictions (such as keeping it away from programmes for under-16s) may not be enough to make it acceptable",
+          "catch_rate": 0.5
+        }
+      ],
+      "avg_completion_tokens": 2256,
+      "avg_cost": 0.0645978,
+      "runs_detail": [
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            false,
+            false,
+            false
+          ],
+          "usage": {
+            "prompt_tokens": 32263,
+            "cached_tokens": 0,
+            "completion_tokens": 2291,
+            "cost": 0.103499
+          },
+          "judge_cost": 0.0004113
+        },
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            true,
+            true,
+            true
+          ],
+          "usage": {
+            "prompt_tokens": 32263,
+            "cached_tokens": 32126,
+            "completion_tokens": 2221,
+            "cost": 0.0256966
+          },
+          "judge_cost": 0.0003958
+        }
+      ]
+    },
+    {
+      "case": "viva-2018-milk-cancer",
+      "effort": "medium",
+      "runs_ok": 2,
+      "runs": 2,
+      "expected_verdict": "Needs changes",
+      "verdict_match_rate": 0,
+      "must_flag": [
+        {
+          "item": "'Some of these are linked to cancer' will be read as meaning drinking milk can raise cancer risk, even though the ad does not say 'causes'; the overall impression matters, not the softer wording",
+          "catch_rate": 1
+        },
+        {
+          "item": "The claim that some of milk's hormones are linked to cancer lacks adequate substantiation (the 35 hormones figure may be evidenced, but the cancer link is not)",
+          "catch_rate": 1
+        },
+        {
+          "item": "The ad implies a health risk from drinking milk that it cannot prove; it should not state or imply that hormones in milk increase cancer risk",
+          "catch_rate": 1
+        }
+      ],
+      "avg_completion_tokens": 1930.5,
+      "avg_cost": 0.0227536,
+      "runs_detail": [
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            true,
+            true,
+            true
+          ],
+          "usage": {
+            "prompt_tokens": 32244,
+            "cached_tokens": 32126,
+            "completion_tokens": 1918,
+            "cost": 0.0226286
+          },
+          "judge_cost": 0.0002625
+        },
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            true,
+            true,
+            true
+          ],
+          "usage": {
+            "prompt_tokens": 32244,
+            "cached_tokens": 32126,
+            "completion_tokens": 1943,
+            "cost": 0.0228786
+          },
+          "judge_cost": 0.0002653
+        }
+      ]
+    },
+    {
+      "case": "viva-2025-07",
+      "effort": "medium",
+      "runs_ok": 2,
+      "runs": 2,
+      "expected_verdict": "High risk, get legal review",
+      "verdict_match_rate": 1,
+      "must_flag": [
+        {
+          "item": "The comparison between a human baby being taken and calves separated from their mothers is likely to be seen as insensitive and distressing, especially to people with experience of child loss or fertility problems",
+          "catch_rate": 0.5
+        },
+        {
+          "item": "The menacing 'bogeyman' horror imagery and the baby's disappearance are shocking and unsettling, creating a strong sense of unease and threat",
+          "catch_rate": 0.5
+        },
+        {
+          "item": "The line 'You can't keep your baby' combined with the baby's sudden disappearance is particularly upsetting for vulnerable viewers",
+          "catch_rate": 0
+        },
+        {
+          "item": "The late reveal of the dairy parallel (only in the second half) amplifies the emotional impact and distress",
+          "catch_rate": 0
+        },
+        {
+          "item": "The message does not justify the level of distress; the ad risks being judged irresponsible and likely to cause unjustified distress and serious or widespread offence",
+          "catch_rate": 0.5
+        },
+        {
+          "item": "A 15+ rating or horror-film placement does not by itself make the ad acceptable",
+          "catch_rate": 0.5
+        }
+      ],
+      "avg_completion_tokens": 2471,
+      "avg_cost": 0.0288406,
+      "runs_detail": [
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "usage": {
+            "prompt_tokens": 32585,
+            "cached_tokens": 32126,
+            "completion_tokens": 2427,
+            "cost": 0.0284006
+          },
+          "judge_cost": 0.0004164
+        },
+        {
+          "verdict": "High risk, get legal review",
+          "model_verdict": null,
+          "caught": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "usage": {
+            "prompt_tokens": 32585,
+            "cached_tokens": 32126,
+            "completion_tokens": 2515,
+            "cost": 0.0292806
+          },
+          "judge_cost": 0.0004296
+        }
+      ]
+    }
+  ]
+}
