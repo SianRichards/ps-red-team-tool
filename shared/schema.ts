@@ -11,6 +11,7 @@ export const Claim = z.object({
   evidence_status: z.enum(["Sourced", "Weak", "Missing", "Not checked"]),
   risk: Rating,
   notes: z.string().default(""),
+  rules: z.array(z.string()).default([]),
   source_ref: z.string().nullable().default(null),
 });
 
@@ -25,6 +26,7 @@ export const Risk = z.object({
   type: z.enum(["regulatory", "reputational", "audience"]),
   // True if holding the right evidence or sign-off would remove this risk.
   fixable_by_evidence: z.boolean().default(false),
+  rules: z.array(z.string()).default([]),
 });
 
 export const CHECKLIST_WHERE = [
@@ -38,6 +40,7 @@ export const COPY_ADVICE_ITEM = {
   related_claim: null,
   why: "A second opinion on the final wording and image before launch.",
   evidence_needed: "Written Copy Advice on the final version. Don't describe the ad as ASA/CAP approved afterwards.",
+  rules: [] as string[],
   where: "get sign-off",
 } as const;
 
@@ -47,6 +50,7 @@ export const ChecklistItem = z.object({
   related_claim: z.string().nullable().default(null),
   why: z.string(),
   evidence_needed: z.string(),
+  rules: z.array(z.string()).default([]),
 });
 
 export const Fix = z.object({

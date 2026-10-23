@@ -32,11 +32,11 @@ Respond with a single JSON object and nothing else (no markdown fences, no comme
 Exact shape:
 {
   "summary": string,
-  "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "source_ref": <exact reference doc name> or null}],
+  "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "rules": [string], "source_ref": <exact reference doc name> or null}],
   "attacks": [{"critic": "industry"|"asa"|"media"|"public"|"ad_owner", "quote": string}],
-  "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience", "fixable_by_evidence": boolean}],
+  "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience", "fixable_by_evidence": boolean, "rules": [string]}],
   "fixes": [{"issue": string, "fix": string, "sharpest_defensible_version": string}],
-  "checklist": [{"item": string, "where": "keep on file"|"keep on file + publish on website (recommended)"|"get sign-off", "related_claim": string or null, "why": string, "evidence_needed": string}],
+  "checklist": [{"item": string, "where": "keep on file"|"keep on file + publish on website (recommended)"|"get sign-off", "related_claim": string or null, "why": string, "evidence_needed": string, "rules": [string]}],
   "working": [string],
   "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review",
   "legal_flags": [string]
@@ -52,7 +52,14 @@ Evidence and checklist rules:
 - Only put an item on the checklist if holding evidence or sign-off would fix it. A claim that needs rewording goes in fixes only, never on the checklist.
 - Media-owner acceptance (TfL, Global and similar) is a checklist item, not a risk.
 - Each checklist item's evidence_needed must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
-- In every free-text field, cite rules and rulings by name (e.g. "CAP Code rule 3.7", "ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
+- In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
+
+Plain English rules:
+- Write for a campaigner, not a lawyer. Short sentences, no jargon.
+- Name things specifically: quote the ad's exact words, and name the body or source (e.g. "the Animal Welfare Committee, which advises the government") rather than "the committee" or "the claim".
+- No generic hedging (e.g. "may be selective, out of context or outdated"). State the specific concern and why, or leave it out.
+- Say what to do, not just the rule. Example: "Check the quote matches the report word for word, and avoid wording that suggests the committee supports your campaign."
+- Never put rule numbers in sentences. Put them in the "rules" array on risks, claims and checklist items, in the form ["CAP 3.47", "CAP 3.52"] (empty array if none).
 
 CAP Section 3 focus. For campaign ads, apply only these rules and ignore the rest of Section 3 (prices, availability, competitor comparisons, reviews, guarantees):
 - Judge the overall impression and likely effect on viewers, not intent.

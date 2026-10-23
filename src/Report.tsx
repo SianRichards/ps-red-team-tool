@@ -22,6 +22,19 @@ function Tag({ children }: { children: ReactNode }) {
   );
 }
 
+function RuleTags({ rules }: { rules: string[] }) {
+  if (!rules.length) return null;
+  return (
+    <span className="ml-1 inline-flex flex-wrap gap-1 align-middle">
+      {rules.map((r) => (
+        <span key={r} className="whitespace-nowrap bg-fg/10 px-1.5 py-0.5 text-xs text-fg/60">
+          {r}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function Section({
   title,
   index,
@@ -161,6 +174,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
                       <span className="block text-sm lowercase text-accent-text">evidence needed</span>
                       {c.evidence_needed}
                     </span>
+                    <RuleTags rules={c.rules} />
                   </span>
                 </label>
               </li>
@@ -211,6 +225,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
             body: (
               <p className="text-sm lowercase">
                 {r.type}
+                <RuleTags rules={r.rules} />
                 {r.fixable_by_evidence && (
                   <>
                     {" "}
@@ -226,7 +241,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
         <Table
           head={["Claim", "Kind", "Evidence", "Risk", "Notes", "Source"]}
           rows={report.claims.map((c) => ({
-            cells: [c.claim, <Tag>{c.claim_kind}</Tag>, c.evidence_status, <Badge level={c.risk} />, c.notes, c.source_ref ?? "-"],
+            cells: [c.claim, <Tag>{c.claim_kind}</Tag>, c.evidence_status, <Badge level={c.risk} />, <>{c.notes}<RuleTags rules={c.rules} /></>, c.source_ref ?? "-"],
             high: c.risk === "High",
           }))}
         />
