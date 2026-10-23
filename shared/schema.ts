@@ -144,21 +144,30 @@ export const computeVerdictAfterTodos = (tabs: Report["tabs"]) => computeVerdict
 
 /**
  * The short headline verdict, from the tab items (the optional Copy Advice check is ignored):
- * - High risk: any "rethink" item, or any High regulatory item that is not a reword, hold-evidence
- *   or get-approval item
+ * - High risk: any "rethink" item, or any High regulatory item that is not a reword, hold-evidence,
+ *   get-approval or prepare-response item
  * - Needs changes: any reword item rated High or Medium
- * - Nearly ready: only hold-evidence and get-approval items (plus Low rewords) left
+ * - Nearly ready: hold-evidence, get-approval or Low reword items left, or any prepare-response item
+ *   rated High or Medium (these never raise the headline above this)
  * - Ready to launch: none of the above
  */
 export function computeHeadline(tabs: Report["tabs"]): (typeof HEADLINES)[number] {
   const regulators = tabs.regulators.items.filter((i) => !isCopyAdvice(i));
-  const others = [...tabs.public.items, ...tabs.industry.items];
-  const all = [...regulators, ...others];
+  const all = [...regulators, ...tabs.public.items, ...tabs.industry.items];
   const isRegulatory = (i: Item) => regulators.includes(i) && i.rules.some((r) => CAP_RULE.test(r));
-  if (all.some((i) => i.type === "rethink" || (i.rating === "High" && isRegulatory(i) && !DONE_TYPES.has(i.type))))
+  const blocking = (i: Item) => !DONE_TYPES.has(i.type) && i.type !== "prepare response";
+  if (all.some((i) => i.type === "rethink" || (i.rating === "High" && isRegulatory(i) && blocking(i))))
     return "High risk";
   if (all.some((i) => i.type === "reword" && i.rating !== "Low")) return "Needs changes";
-  if (all.some((i) => i.type === "hold evidence" || i.type === "get approval" || i.type === "reword"))
+  if (
+    all.some(
+      (i) =>
+        i.type === "hold evidence" ||
+        i.type === "get approval" ||
+        i.type === "reword" ||
+        (i.type === "prepare response" && i.rating !== "Low"),
+    )
+  )
     return "Nearly ready";
   return "Ready to launch";
 }
@@ -219,20 +228,21 @@ export interface Config {
 }
 
 /**
- * What to do before launch, from the items: lines to reword, sources to hold, who has to approve.
- * Copy Advice and prepare-response items are not counted.
+ * What to do before launch, from the items: lines to reword, sources to hold, who has to approve,
+ * and High or Medium attacks to prepare a response for. Copy Advice is not counted.
  */
 export function pathToVerdict(report: Report) {
   const items = Object.values(report.tabs).flatMap((tab) => tab.items);
   const rewords = items.filter((d) => d.type === "reword").length;
   const sources = items.filter((d) => d.type === "hold evidence").length;
+  const responses = items.filter((d) => d.type === "prepare response" && d.rating !== "Low").length;
   const approvers: string[] = [];
   for (const d of items) {
     if (d.type !== "get approval" || isCopyAdvice(d)) continue;
     const who = d.approver_known && d.approver ? d.approver : "the media owner";
     if (!approvers.includes(who)) approvers.push(who);
   }
-  return { rewords, sources, approvers };
+  return { rewords, sources, approvers, responses };
 }
 
 /** "A", "A and B", "A, B and C". */

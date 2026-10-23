@@ -30,10 +30,10 @@ At the top, always visible:
 - **Headline verdict**, one of:
   - **High risk**: something needs rethinking, or a serious regulatory problem has no fix in the list.
   - **Needs changes**: at least one line needs rewording.
-  - **Nearly ready**: only evidence to hold and approvals to get are left.
+  - **Nearly ready**: only evidence to hold, approvals to get, minor rewording or a response to prepare for a likely attack are left. A serious attack to prepare for never pushes the headline above this.
   - **Ready to launch**: nothing left to do.
 - **Bottom line**: the tool's judgement in a sentence or two: how strong the ad is and its biggest weak point.
-- **Before launch**: what to do, in short: how many lines to reword, how many sources to hold on file, and who has to approve (for example TfL or a lawyer).
+- **Before launch**: what to do, in short: how many lines to reword, how many sources to hold on file, who has to approve (for example TfL or a lawyer), and how many serious attacks to prepare a response for.
 - One line per audience with its rating and its most important item.
 
 Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and media owners), **Public & press** and **Industry & critics**. The last two are likely reactions based on the ad's content, not tested against real responses. Each tab has an overall assessment and one list of things to do. Each item is a problem together with its action, with a rating, the ad's exact words, and the CAP rules involved (click a rule to open it on the ASA site). Items are grouped as:

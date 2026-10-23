@@ -315,11 +315,12 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   });
 
   const headline = report.headline ?? "Needs changes";
-  const { rewords, sources, approvers } = pathToVerdict(report);
+  const { rewords, sources, approvers, responses } = pathToVerdict(report);
   const steps = [
     rewords > 0 && `reword ${rewords} ${rewords === 1 ? "line" : "lines"}`,
     sources > 0 && `hold ${sources} ${sources === 1 ? "source" : "sources"}`,
     approvers.length > 0 && `get approval from ${joinAnd(approvers)}`,
+    responses > 0 && `prepare ${responses} ${responses === 1 ? "response" : "responses"}`,
   ].filter(Boolean) as string[];
 
   return (
