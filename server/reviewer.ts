@@ -48,6 +48,9 @@ Evidence and checklist rules:
 - CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
 - If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the fix is rewording.
 - Distress, offence and imagery risks are never fixable by evidence (fixable_by_evidence = false).
+- Media-owner acceptance and legal sign-off are not CAP rules: leave "rules" empty on those checklist items (do not tag them CAP 1.8 or similar).
+- Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
+- A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: set claim_kind "factual", not "rhetoric".
 - Risk type: any risk that could break a CAP rule (misleading, distress, offence, harm) is type "regulatory". Use "reputational" and "audience" only for risks no CAP rule covers (e.g. backlash, alienating supporters).
 - One risk per issue. Never combine an evidence problem (fixable_by_evidence = true) with a wording or caveat problem (false) in one risk; split them. Example: "90% stat needs a source" (true) vs "90% may only apply to England; the ad says UK" (false: reword or add a caveat on the ad). Only raise the wording or caveat risk if there is a real reason to suspect it, not as a generic possibility.
 - Only put an item on the checklist if holding evidence or sign-off would fix it. A claim that needs rewording goes in fixes only, never on the checklist.
