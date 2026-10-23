@@ -29,15 +29,17 @@ At the top, always visible:
 
 - **Bottom line**: the tool's judgement and the main thing to do, in a sentence or two.
 - **Before launch**: what to do, in short: how many lines to reword, how many sources to hold on file, and who has to approve (for example TfL or a lawyer).
-- **Once done**: the verdict if you do all of that. A problem with no fix in the to-do list still counts, so this can stay high.
+- **Once done**: the verdict if you do all the rewording, evidence and approvals. Anything that needs rethinking, or a response, still counts, so this can stay high.
 - **Right now**: the verdict for the draft as it stands, shown only when it differs.
-- One line per audience with its rating and its top problem.
+- One line per audience with its rating and its most important item.
 
-Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and media owners), **Public & press** and **Industry & critics**. The last two are likely reactions based on the ad's content, not tested against real responses. Each tab has:
+Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and media owners), **Public & press** and **Industry & critics**. The last two are likely reactions based on the ad's content, not tested against real responses. Each tab has an overall assessment and one list of things to do. Each item is a problem together with its action, with a rating, the ad's exact words, and the CAP rules involved (click a rule to open it on the ASA site). Items are grouped as:
 
-- **Overall assessment**.
-- **Problems**: each with a rating, the ad's exact words and the CAP rules involved.
-- **What to do**: tickable to-dos grouped as hold evidence, reword, get approval and prepare a response. You don't need the evidence on the ad. Keep it on file and be ready to send it to the ASA if asked.
+- **Rethink**: the concept itself is the problem.
+- **Reword**: with suggested wording.
+- **Hold evidence**: keep it on file before launch. You don't need it on the ad; be ready to send it to the ASA if asked.
+- **Get approval**: from the media owner, a lawyer, and so on.
+- **Prepare a response**: a likely attack and a suggested reply.
 
 The Regulators tab also has the claims checked and any other legal checks. "What's working" comes after the tabs.
 

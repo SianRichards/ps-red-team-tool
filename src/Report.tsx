@@ -1,7 +1,17 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { TAB_KEYS, joinAnd, pathToVerdict, resolvedIssueIds, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
+import {
+  TAB_KEYS,
+  joinAnd,
+  pathToVerdict,
+  ratedItems,
+  sortItems,
+  tabRating,
+  type Item,
+  type Report,
+  type ReviewResult,
+  type TabKey,
+} from "../shared/schema";
 
-const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 const BADGE = {
   High: "bg-fg text-page",
   Medium: "bg-orange text-black",
@@ -22,17 +32,26 @@ const TABS: Record<TabKey, { label: string; who: string; note?: string }> = {
   },
 };
 
-const TODO_GROUPS: { type: Todo["type"]; heading: string }[] = [
-  { type: "hold evidence", heading: "Hold evidence" },
+const GROUPS: { type: Item["type"]; heading: string }[] = [
+  { type: "rethink", heading: "Rethink" },
   { type: "reword", heading: "Reword" },
+  { type: "hold evidence", heading: "Hold evidence" },
   { type: "get approval", heading: "Get approval" },
   { type: "prepare response", heading: "Prepare a response" },
 ];
 
+/** Link to the ASA page for the section a rule like "CAP 3.7" or "BCAP 4.1" belongs to. */
+function ruleUrl(rule: string): string | null {
+  const m = rule.match(/^\s*(B?CAP)\s*(\d+)/i);
+  if (!m) return null;
+  const code = m[1].toUpperCase() === "BCAP" ? "broadcast" : "non_broadcast";
+  return `https://www.asa.org.uk/type/${code}/code_section/${m[2].padStart(2, "0")}.html`;
+}
+
 function Badge({ level }: { level: keyof typeof BADGE | null }) {
-  if (!level) return <span className="inline-block border border-fg/60 px-3 py-0.5 text-sm opacity-70">No issues</span>;
+  if (!level) return <span className="inline-block border border-fg/60 px-3 py-0.5 text-sm opacity-70">No items</span>;
   return (
-    <span className={`inline-block rounded-full px-3 py-0.5 text-sm font-semibold ${BADGE[level]}`}>{level}</span>
+    <span className={`inline-block shrink-0 rounded-full px-3 py-0.5 text-sm font-semibold ${BADGE[level]}`}>{level}</span>
   );
 }
 
@@ -44,11 +63,26 @@ function RuleTags({ rules }: { rules: string[] }) {
   if (!rules.length) return null;
   return (
     <span className="inline-flex flex-wrap gap-1 align-middle">
-      {rules.map((r) => (
-        <span key={r} className="whitespace-nowrap bg-fg/10 px-1.5 py-0.5 text-xs text-fg/60">
-          {r}
-        </span>
-      ))}
+      {rules.map((r) => {
+        const url = ruleUrl(r);
+        const cls = "whitespace-nowrap bg-fg/10 px-1.5 py-0.5 text-xs text-fg/60";
+        return url ? (
+          <a
+            key={r}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open the rules on the ASA site"
+            className={`${cls} underline-offset-2 hover:text-fg hover:underline`}
+          >
+            {r}
+          </a>
+        ) : (
+          <span key={r} className={cls}>
+            {r}
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -113,81 +147,69 @@ function verdictClass(v: Report["verdict"]) {
   return "text-fg";
 }
 
-function sortIssues(issues: Issue[], covered: Set<string>) {
-  // Highest rating first; within a rating, issues covered by a to-do come last.
-  return [...issues].sort(
-    (a, b) => RATING_ORDER[a.rating] - RATING_ORDER[b.rating] || Number(covered.has(a.id)) - Number(covered.has(b.id)),
-  );
-}
-
-function IssueCard({ issue, covered }: { issue: Issue; covered: boolean }) {
-  return (
-    <div className={`flex flex-col gap-2 border border-fg p-4 text-[15px] ${covered ? "opacity-60" : ""}`}>
-      <div className="flex items-start justify-between gap-3">
-        <p className="font-semibold">{issue.title}</p>
-        <Badge level={issue.rating} />
-      </div>
-      {issue.ad_quote && (
-        <blockquote className="border-l-2 border-accent-text pl-3 italic">“{issue.ad_quote}”</blockquote>
-      )}
-      <p className="opacity-90">{issue.detail}</p>
-      {(issue.rules.length > 0 || covered) && (
-        <p>
-          <RuleTags rules={issue.rules} />
-          {covered && <Tag>Covered by a to-do</Tag>}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function TodoCard({ todo, titles }: { todo: Todo; titles: Map<string, string> }) {
-  const about = todo.issue_ids.map((id) => titles.get(id)).filter(Boolean) as string[];
+function ItemCard({ item }: { item: Item }) {
   return (
     <li className="border border-fg p-4 text-[15px]">
-      <label className="flex items-start gap-3">
-        <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
-        <span className="block space-y-1.5">
-          <span className="block font-medium">
-            {todo.action}
-            {todo.where && <Tag>{todo.where}</Tag>}
-          </span>
-          {about.length > 0 && <span className="block text-sm opacity-70">About: {about.join("; ")}</span>}
-          {todo.detail && <span className="block opacity-90">{todo.detail}</span>}
-          {todo.suggested_wording && (
-            <span className="block">
-              <Label>Suggested wording</Label>
-              {todo.suggested_wording}
-            </span>
-          )}
-          {todo.likely_attack && (
-            <span className="block">
-              <Label>Likely attack</Label>
-              {todo.likely_attack}
-            </span>
-          )}
-          {todo.suggested_reply && (
-            <span className="block">
-              <Label>Suggested reply</Label>
-              {todo.suggested_reply}
-            </span>
-          )}
-          {todo.rules.length > 0 && (
-            <span className="block">
-              <RuleTags rules={todo.rules} />
-            </span>
-          )}
-        </span>
-      </label>
+      <div className="flex items-start justify-between gap-3">
+        <label className="flex items-start gap-3">
+          <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
+          <span className="font-medium">{item.action}</span>
+        </label>
+        <Badge level={item.rating} />
+      </div>
+      <div className="mt-2 space-y-1.5 pl-7">
+        {item.where && (
+          <p>
+            <Tag>{item.where}</Tag>
+          </p>
+        )}
+        {item.ad_quote && (
+          <blockquote className="border-l-2 border-accent-text pl-3 italic">“{item.ad_quote}”</blockquote>
+        )}
+        {item.detail && <p className="opacity-90">{item.detail}</p>}
+        {item.suggested_wording && (
+          <p>
+            <Label>Suggested wording</Label>
+            {item.suggested_wording}
+          </p>
+        )}
+        {item.likely_attack && (
+          <p>
+            <Label>Likely attack</Label>
+            {item.likely_attack}
+          </p>
+        )}
+        {item.suggested_reply && (
+          <p>
+            <Label>Suggested reply</Label>
+            {item.suggested_reply}
+          </p>
+        )}
+        {item.type === "get approval" && item.approver && (
+          <p>
+            <Label>Approver</Label>
+            {item.approver}
+          </p>
+        )}
+        {item.rules.length > 0 && (
+          <p>
+            <RuleTags rules={item.rules} />
+          </p>
+        )}
+        {item.why && (
+          <details>
+            <summary className="select-none text-sm text-accent-text">Why this matters</summary>
+            <p className="mt-1 opacity-90">{item.why}</p>
+          </details>
+        )}
+      </div>
     </li>
   );
 }
 
 function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
   const tab = report.tabs[tabKey];
-  const covered = resolvedIssueIds(report.tabs);
-  const issues = sortIssues(tab.issues, covered);
-  const titles = new Map(Object.values(report.tabs).flatMap((t) => t.issues.map((i) => [i.id, i.title] as const)));
+  const items = sortItems(tab.items);
   const { note } = TABS[tabKey];
   return (
     <div className="space-y-8">
@@ -199,25 +221,12 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
       </section>
 
       <section>
-        <h3 className="mb-3 font-semibold">Problems</h3>
-        {issues.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {issues.map((i) => (
-              <IssueCard key={i.id} issue={i} covered={covered.has(i.id)} />
-            ))}
-          </div>
-        ) : (
-          <p className="opacity-70">No problems found for this audience.</p>
-        )}
-      </section>
-
-      <section>
         <h3 className="mb-3 font-semibold">What to do</h3>
-        {tab.todo.length ? (
+        {items.length ? (
           <div className="space-y-6">
-            {TODO_GROUPS.map(({ type, heading }) => {
-              const items = tab.todo.filter((d) => d.type === type);
-              if (!items.length) return null;
+            {GROUPS.map(({ type, heading }) => {
+              const group = items.filter((d) => d.type === type);
+              if (!group.length) return null;
               return (
                 <div key={type}>
                   <h4 className="mb-1 text-sm font-semibold text-accent-text">{heading}</h4>
@@ -229,8 +238,8 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
                     </p>
                   )}
                   <ul className="space-y-4">
-                    {items.map((d, i) => (
-                      <TodoCard key={i} todo={d} titles={titles} />
+                    {group.map((d) => (
+                      <ItemCard key={d.id} item={d} />
                     ))}
                   </ul>
                 </div>
@@ -276,7 +285,8 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   const [active, setActive] = useState<TabKey>("regulators");
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  if (!report?.tabs) {
+  // Reviews saved before the to-do list format have no `items` and can't be shown.
+  if (!report?.tabs || !Array.isArray(report.tabs.regulators?.items)) {
     return (
       <p className="border border-fg p-4 text-[15px]">
         This review is in an older format and can't be shown. Re-run the review.
@@ -295,8 +305,13 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   }
 
   const summaryRows = TAB_KEYS.map((k) => {
-    const issues = sortIssues(report.tabs[k].issues, resolvedIssueIds(report.tabs));
-    return { key: k, rating: tabRating(report.tabs[k].issues), top: issues[0]?.title ?? null, count: issues.length };
+    const items = report.tabs[k].items;
+    return {
+      key: k,
+      rating: tabRating(items),
+      top: sortItems(ratedItems(items))[0]?.action ?? null,
+      count: items.length,
+    };
   });
 
   const headline = report.verdict_after_todos ?? report.verdict;

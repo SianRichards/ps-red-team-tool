@@ -77,11 +77,11 @@ function reportText(r: Report): string {
   const lines = [`Bottom line: ${r.bottom_line}`];
   for (const [name, tab] of Object.entries(r.tabs)) {
     lines.push(`[${name}] ${tab.assessment}`);
-    for (const i of tab.issues)
-      lines.push(`Issue (${i.rating}, ${name}): ${i.title}. ${i.detail}${i.ad_quote ? ` Ad words: "${i.ad_quote}"` : ""}`);
-    for (const d of tab.todo) {
-      const extra = [d.suggested_wording, d.likely_attack, d.suggested_reply].filter(Boolean).join(" | ");
-      lines.push(`To do (${d.type}, ${name}): ${d.action}. ${d.detail}${extra ? ` ${extra}` : ""}`);
+    for (const i of tab.items) {
+      const extra = [i.suggested_wording, i.likely_attack, i.suggested_reply, i.why].filter(Boolean).join(" | ");
+      lines.push(
+        `Item (${i.rating}, ${i.type}, ${name}): ${i.action}. ${i.detail}${i.ad_quote ? ` Ad words: "${i.ad_quote}"` : ""}${extra ? ` ${extra}` : ""}`,
+      );
     }
   }
   for (const c of r.tabs.regulators.claims)

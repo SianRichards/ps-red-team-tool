@@ -14,26 +14,22 @@ export const Claim = z.object({
   source_ref: z.string().nullable().default(null),
 });
 
-export const Issue = z.object({
-  id: z.string(),
-  title: z.string(),
-  detail: z.string(),
-  rating: Rating,
-  // The ad's exact words that the issue is about.
-  ad_quote: z.string().nullable().default(null),
-  rules: z.array(z.string()).default([]),
-  // True if holding the right evidence or approval would remove this issue (regulators tab only).
-  fixable_by_evidence: z.boolean().default(false),
-});
-
-export const TODO_TYPES = ["hold evidence", "reword", "get approval", "prepare response"] as const;
+export const ITEM_TYPES = ["hold evidence", "reword", "get approval", "prepare response", "rethink"] as const;
 export const EVIDENCE_WHERE = ["keep on file", "keep on file + publish on website (recommended)"] as const;
 
-export const Todo = z.object({
+// One problem and its action, together.
+export const Item = z.object({
+  id: z.string(),
+  // Plain title of what to do, e.g. "Hold a UK-wide source for the 90% figure".
   action: z.string(),
-  type: z.enum(TODO_TYPES),
-  issue_ids: z.array(z.string()).default([]),
+  type: z.enum(ITEM_TYPES),
+  rating: Rating,
+  // The ad's exact words that the item is about.
+  ad_quote: z.string().nullable().default(null),
+  // What is needed.
   detail: z.string().default(""),
+  // Extra context on the problem; null if the action and detail already cover it.
+  why: z.string().nullable().default(null),
   // hold evidence only
   where: z.enum(EVIDENCE_WHERE).nullable().default(null),
   // reword only: the sharpest defensible version
@@ -41,16 +37,15 @@ export const Todo = z.object({
   // prepare response only
   likely_attack: z.string().nullable().default(null),
   suggested_reply: z.string().nullable().default(null),
-  rules: z.array(z.string()).default([]),
   // get approval only: who approves, and whether the placement tells us (e.g. "TfL", "a lawyer").
   approver: z.string().nullable().default(null),
   approver_known: z.boolean().default(false),
+  rules: z.array(z.string()).default([]),
 });
 
 export const Tab = z.object({
   assessment: z.string(),
-  issues: z.array(Issue).default([]),
-  todo: z.array(Todo).default([]),
+  items: z.array(Item).default([]),
 });
 
 export const RegulatorsTab = Tab.extend({
@@ -61,19 +56,24 @@ export const RegulatorsTab = Tab.extend({
 export const TAB_KEYS = ["regulators", "public", "industry"] as const;
 export type TabKey = (typeof TAB_KEYS)[number];
 
-export const COPY_ADVICE_TODO = {
+export const COPY_ADVICE_ITEM = {
+  id: "copy-advice",
   action: "Get a free pre-launch check from CAP's Copy Advice service",
   type: "get approval",
-  issue_ids: [] as string[],
+  rating: "Low",
+  ad_quote: null,
   detail: "Ask for written advice on the final version. Don't describe the ad as ASA/CAP approved afterwards.",
+  why: null,
   where: null,
   suggested_wording: null,
   likely_attack: null,
   suggested_reply: null,
-  rules: [] as string[],
   approver: "CAP Copy Advice",
   approver_known: true,
+  rules: [] as string[],
 } as const;
+
+export const isCopyAdvice = (i: { action: string }) => /copy advice/i.test(i.action);
 
 export const VERDICTS = [
   "Ready",
@@ -93,14 +93,13 @@ export const Report = z.object({
   verdict: z.enum(VERDICTS),
   // The model's own verdict, kept when the code-computed verdict differs.
   model_verdict: z.enum(VERDICTS).optional(),
-  // Filled by the server: the verdict once every issue that has a reword, hold-evidence or approval to-do is resolved.
+  // Filled by the server: the verdict once every reword, hold-evidence and get-approval item is done.
   verdict_after_todos: z.enum(VERDICTS).optional(),
   // Filled by the server, not the model.
   unverified_citations: z.array(z.string()).default([]),
 });
 export type Report = z.infer<typeof Report>;
-export type Issue = z.infer<typeof Issue>;
-export type Todo = z.infer<typeof Todo>;
+export type Item = z.infer<typeof Item>;
 
 /** Verdict derived from the risk list, so it always agrees with what is shown. */
 export function computeVerdict(risks: { rating: string; type: string }[]): (typeof VERDICTS)[number] {
@@ -112,51 +111,44 @@ export function computeVerdict(risks: { rating: string; type: string }[]): (type
 
 const CAP_RULE = /B?CAP/i;
 
-/** To-do types that resolve the issues they reference (prepare-response does not). */
-const RESOLVING_TYPES = new Set<string>(["reword", "hold evidence", "get approval"]);
+/** Item types that are done by the time of launch; "rethink" and "prepare response" stay. */
+const DONE_TYPES = new Set<string>(["reword", "hold evidence", "get approval"]);
 
 /**
- * Flatten all tabs to risks. Only regulators issues that cite a CAP/BCAP rule are regulatory;
- * public and industry issues never are. Issues in `resolved` are left out.
+ * Flatten all tabs to risks. Only regulators items that cite a CAP/BCAP rule are regulatory;
+ * public and industry items never are. With `afterTodos`, reword, hold-evidence and get-approval
+ * items are left out.
  */
-export function tabRisks(tabs: Report["tabs"], resolved: Set<string> = new Set()) {
+export function tabRisks(tabs: Report["tabs"], afterTodos = false) {
+  const keep = (i: Item) => !(afterTodos && DONE_TYPES.has(i.type));
   return [
-    ...tabs.regulators.issues
-      .filter((i) => !resolved.has(i.id))
-      .map((i) => ({
-        rating: i.rating,
-        type: i.rules.some((r) => CAP_RULE.test(r)) ? "regulatory" : "reputational",
-      })),
-    ...[...tabs.public.issues, ...tabs.industry.issues]
-      .filter((i) => !resolved.has(i.id))
-      .map((i) => ({ rating: i.rating, type: "reputational" })),
+    ...tabs.regulators.items.filter(keep).map((i) => ({
+      rating: i.rating,
+      type: i.rules.some((r) => CAP_RULE.test(r)) ? "regulatory" : "reputational",
+    })),
+    ...[...tabs.public.items, ...tabs.industry.items].filter(keep).map((i) => ({
+      rating: i.rating,
+      type: "reputational",
+    })),
   ];
 }
 
 export const computeReportVerdict = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs));
 
-/** Ids of issues that a reword, hold-evidence or get-approval to-do references. */
-export function resolvedIssueIds(tabs: Report["tabs"]): Set<string> {
-  return new Set(
-    Object.values(tabs)
-      .flatMap((tab) => tab.todo)
-      .filter((d) => RESOLVING_TYPES.has(d.type))
-      .flatMap((d) => d.issue_ids),
-  );
-}
-
-/** Verdict once every issue referenced by a reword, hold-evidence or get-approval to-do is resolved. */
-export const computeVerdictAfterTodos = (tabs: Report["tabs"]) =>
-  computeVerdict(tabRisks(tabs, resolvedIssueIds(tabs)));
+/** Verdict once every reword, hold-evidence and get-approval item is done. */
+export const computeVerdictAfterTodos = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs, true));
 
 const RATING_RANK = { High: 0, Medium: 1, Low: 2 } as const;
 
-/** Highest issue rating in a tab, or null if it has no issues. */
-export function tabRating(issues: { rating: keyof typeof RATING_RANK }[]): keyof typeof RATING_RANK | null {
-  return issues.reduce<keyof typeof RATING_RANK | null>(
-    (best, i) => (best === null || RATING_RANK[i.rating] < RATING_RANK[best] ? i.rating : best),
-    null,
-  );
+/** The items that count for a tab's rating: all except the optional Copy Advice check. */
+export const ratedItems = (items: Item[]) => items.filter((i) => !isCopyAdvice(i));
+
+/** Items highest rating first (stable). */
+export const sortItems = (items: Item[]) => [...items].sort((a, b) => RATING_RANK[a.rating] - RATING_RANK[b.rating]);
+
+/** Highest rating among a tab's items, or null if it has none. */
+export function tabRating(items: Item[]): keyof typeof RATING_RANK | null {
+  return sortItems(ratedItems(items))[0]?.rating ?? null;
 }
 
 export interface Usage {
@@ -202,16 +194,16 @@ export interface Config {
 }
 
 /**
- * What to do before launch, from the to-dos: lines to reword, sources to hold, who has to approve.
+ * What to do before launch, from the items: lines to reword, sources to hold, who has to approve.
  * Copy Advice and prepare-response items are not counted.
  */
 export function pathToVerdict(report: Report) {
-  const todos = Object.values(report.tabs).flatMap((tab) => tab.todo);
-  const rewords = todos.filter((d) => d.type === "reword").length;
-  const sources = todos.filter((d) => d.type === "hold evidence").length;
+  const items = Object.values(report.tabs).flatMap((tab) => tab.items);
+  const rewords = items.filter((d) => d.type === "reword").length;
+  const sources = items.filter((d) => d.type === "hold evidence").length;
   const approvers: string[] = [];
-  for (const d of todos) {
-    if (d.type !== "get approval" || /copy advice/i.test(d.action)) continue;
+  for (const d of items) {
+    if (d.type !== "get approval" || isCopyAdvice(d)) continue;
     const who = d.approver_known && d.approver ? d.approver : "the media owner";
     if (!approvers.includes(who)) approvers.push(who);
   }
