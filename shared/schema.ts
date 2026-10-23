@@ -135,16 +135,19 @@ export function tabRisks(tabs: Report["tabs"], resolved: Set<string> = new Set()
 
 export const computeReportVerdict = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs));
 
-/** Verdict once every issue referenced by a reword, hold-evidence or get-approval to-do is resolved. */
-export function computeVerdictAfterTodos(tabs: Report["tabs"]) {
-  const resolved = new Set(
+/** Ids of issues that a reword, hold-evidence or get-approval to-do references. */
+export function resolvedIssueIds(tabs: Report["tabs"]): Set<string> {
+  return new Set(
     Object.values(tabs)
       .flatMap((tab) => tab.todo)
       .filter((d) => RESOLVING_TYPES.has(d.type))
       .flatMap((d) => d.issue_ids),
   );
-  return computeVerdict(tabRisks(tabs, resolved));
 }
+
+/** Verdict once every issue referenced by a reword, hold-evidence or get-approval to-do is resolved. */
+export const computeVerdictAfterTodos = (tabs: Report["tabs"]) =>
+  computeVerdict(tabRisks(tabs, resolvedIssueIds(tabs)));
 
 const RATING_RANK = { High: 0, Medium: 1, Low: 2 } as const;
 

@@ -2,7 +2,7 @@
   "campaign": "Dairy is Scary",
   "placement": "Cinema, alongside horror, sci-fi and thriller films (15+ restriction)",
   "expected_verdict": "High risk, get legal review",
-  "expected_verdict_after_checklist": "High risk, get legal review",
+  "expected_verdict_after_todos": "High risk, get legal review",
   "must_flag": [
     "The comparison between a human baby being taken and calves separated from their mothers is likely to be seen as insensitive and distressing, especially to people with experience of child loss or fertility problems",
     "The menacing 'bogeyman' horror imagery and the baby's disappearance are shocking and unsettling, creating a strong sense of unease and threat",

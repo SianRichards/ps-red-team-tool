@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { TAB_KEYS, joinAnd, pathToVerdict, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
+import { TAB_KEYS, joinAnd, pathToVerdict, resolvedIssueIds, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
 
 const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 const BADGE = {
@@ -113,17 +113,16 @@ function verdictClass(v: Report["verdict"]) {
   return "text-fg";
 }
 
-function sortIssues(issues: Issue[]) {
-  // Highest rating first; within a rating, issues covered by a hold-evidence to-do come last.
+function sortIssues(issues: Issue[], covered: Set<string>) {
+  // Highest rating first; within a rating, issues covered by a to-do come last.
   return [...issues].sort(
-    (a, b) =>
-      RATING_ORDER[a.rating] - RATING_ORDER[b.rating] || Number(a.fixable_by_evidence) - Number(b.fixable_by_evidence),
+    (a, b) => RATING_ORDER[a.rating] - RATING_ORDER[b.rating] || Number(covered.has(a.id)) - Number(covered.has(b.id)),
   );
 }
 
-function IssueCard({ issue }: { issue: Issue }) {
+function IssueCard({ issue, covered }: { issue: Issue; covered: boolean }) {
   return (
-    <div className={`flex flex-col gap-2 border border-fg p-4 text-[15px] ${issue.fixable_by_evidence ? "opacity-60" : ""}`}>
+    <div className={`flex flex-col gap-2 border border-fg p-4 text-[15px] ${covered ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <p className="font-semibold">{issue.title}</p>
         <Badge level={issue.rating} />
@@ -132,10 +131,10 @@ function IssueCard({ issue }: { issue: Issue }) {
         <blockquote className="border-l-2 border-accent-text pl-3 italic">“{issue.ad_quote}”</blockquote>
       )}
       <p className="opacity-90">{issue.detail}</p>
-      {(issue.rules.length > 0 || issue.fixable_by_evidence) && (
+      {(issue.rules.length > 0 || covered) && (
         <p>
           <RuleTags rules={issue.rules} />
-          {issue.fixable_by_evidence && <Tag>Covered by checklist</Tag>}
+          {covered && <Tag>Covered by a to-do</Tag>}
         </p>
       )}
     </div>
@@ -186,7 +185,8 @@ function TodoCard({ todo, titles }: { todo: Todo; titles: Map<string, string> })
 
 function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
   const tab = report.tabs[tabKey];
-  const issues = sortIssues(tab.issues);
+  const covered = resolvedIssueIds(report.tabs);
+  const issues = sortIssues(tab.issues, covered);
   const titles = new Map(Object.values(report.tabs).flatMap((t) => t.issues.map((i) => [i.id, i.title] as const)));
   const { note } = TABS[tabKey];
   return (
@@ -203,7 +203,7 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
         {issues.length ? (
           <div className="grid gap-4 md:grid-cols-2">
             {issues.map((i) => (
-              <IssueCard key={i.id} issue={i} />
+              <IssueCard key={i.id} issue={i} covered={covered.has(i.id)} />
             ))}
           </div>
         ) : (
@@ -295,7 +295,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   }
 
   const summaryRows = TAB_KEYS.map((k) => {
-    const issues = sortIssues(report.tabs[k].issues);
+    const issues = sortIssues(report.tabs[k].issues, resolvedIssueIds(report.tabs));
     return { key: k, rating: tabRating(report.tabs[k].issues), top: issues[0]?.title ?? null, count: issues.length };
   });
 

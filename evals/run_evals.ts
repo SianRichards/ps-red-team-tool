@@ -22,7 +22,7 @@ const MIME: Record<string, string> = {
 interface Expected {
   must_flag: string[];
   expected_verdict: string;
-  expected_verdict_after_checklist?: string;
+  expected_verdict_after_todos?: string;
   campaign?: string;
   placement?: string;
   audience?: string;
@@ -166,7 +166,7 @@ async function main() {
         }
         ok++;
         if (res.report.verdict === exp.expected_verdict) verdictOk++;
-        if (res.report.verdict_after_todos === exp.expected_verdict_after_checklist) afterOk++;
+        if (res.report.verdict_after_todos === exp.expected_verdict_after_todos) afterOk++;
         const u: Usage = res.usage;
         const row: any = {
           verdict: res.report.verdict,
@@ -201,9 +201,9 @@ async function main() {
         runs,
         expected_verdict: exp.expected_verdict,
         verdict_match_rate: ok ? verdictOk / ok : null,
-        expected_verdict_after_checklist: exp.expected_verdict_after_checklist ?? null,
-        verdict_after_checklist_match_rate:
-          ok && exp.expected_verdict_after_checklist ? afterOk / ok : null,
+        expected_verdict_after_todos: exp.expected_verdict_after_todos ?? null,
+        verdict_after_todos_match_rate:
+          ok && exp.expected_verdict_after_todos ? afterOk / ok : null,
         must_flag: exp.must_flag.map((item, k) => ({ item, catch_rate: judged ? caught[k] / judged : null })),
         avg_completion_tokens: avg(good.map((r) => r.usage.completion_tokens)),
         avg_cost: avg(good.map((r) => r.usage.cost ?? 0)),
@@ -216,7 +216,7 @@ async function main() {
         "ok/runs": `${ok}/${runs}`,
         "judge_error": judgeErrors,
         verdict: ok ? pct(verdictOk, ok) : "-",
-        "after checklist": ok && exp.expected_verdict_after_checklist ? pct(afterOk, ok) : "-",
+        "after to-dos": ok && exp.expected_verdict_after_todos ? pct(afterOk, ok) : "-",
         "issues caught": judged ? pct(caught.reduce((a, b) => a + b, 0), judged * exp.must_flag.length) : "-",
         "avg out tok": Math.round(summary.avg_completion_tokens),
         "avg cost": `$${summary.avg_cost.toFixed(4)}`,

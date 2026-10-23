@@ -2,7 +2,7 @@
   "campaign": "Dairy industry facts",
   "placement": "Bus posters",
   "expected_verdict": "High risk, get legal review",
-  "expected_verdict_after_checklist": "High risk, get legal review",
+  "expected_verdict_after_todos": "High risk, get legal review",
   "must_flag": [
     "'Some of these are linked to cancer' will be read as meaning drinking milk can raise cancer risk, even though the ad does not say 'causes'; the overall impression matters, not the softer wording",
     "The claim that some of milk's hormones are linked to cancer lacks adequate substantiation (the 35 hormones figure may be evidenced, but the cancer link is not)",

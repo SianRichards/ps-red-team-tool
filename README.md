@@ -81,7 +81,7 @@ Copy the clause numbers and the link from the ASA ruling page. Don't paraphrase 
 Evals check the tool against ads with known outcomes. Each case is a folder in `evals/cases/<name>/`:
 
 - `submission.txt` (or an image/PDF named `submission.*`): the ad, as the ad itself. No outcome or reasoning.
-- `expected.json`: `must_flag` (issues the review must raise), `expected_verdict`, and optionally `expected_verdict_after_checklist`, `campaign`, `placement`, `audience`.
+- `expected.json`: `must_flag` (issues the review must raise), `expected_verdict`, and optionally `expected_verdict_after_todos`, `campaign`, `placement`, `audience`.
 - `ruling.md`: the source ruling, for reference only. It is never sent to the model.
 
 Don't also put a case's ruling card in `reference/`, or the test is open-book.
