@@ -48,6 +48,7 @@ Evidence and checklist rules:
 - CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
 - If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the fix is rewording.
 - Distress, offence and imagery risks are never fixable by evidence (fixable_by_evidence = false).
+- One risk per issue. Never combine an evidence problem (fixable_by_evidence = true) with a wording or caveat problem (false) in one risk; split them. Example: "90% stat needs a source" (true) vs "90% may only apply to England; the ad says UK" (false: reword or add a caveat on the ad). Only raise the wording or caveat risk if there is a real reason to suspect it, not as a generic possibility.
 - Only put an item on the checklist if holding evidence or sign-off would fix it. A claim that needs rewording goes in fixes only, never on the checklist.
 - Media-owner acceptance (TfL, Global and similar) is a checklist item, not a risk.
 - Each checklist item's evidence_needed must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".

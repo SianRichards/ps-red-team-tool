@@ -83,12 +83,12 @@ function List({ items }: { items: string[] }) {
   );
 }
 
-function Cards({ items }: { items: { label: string; badge?: ReactNode; body: ReactNode }[] }) {
+function Cards({ items }: { items: { label: string; badge?: ReactNode; body: ReactNode; dim?: boolean }[] }) {
   if (!items.length) return <p className="opacity-70">None.</p>;
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {items.map((c, i) => (
-        <div key={i} className="flex flex-col gap-3 border border-fg p-4 text-[15px]">
+        <div key={i} className={`flex flex-col gap-3 border border-fg p-4 text-[15px] ${c.dim ? "opacity-60" : ""}`}>
           <div className="flex items-start justify-between gap-3">
             <p className="font-semibold">{c.label}</p>
             {c.badge}
@@ -108,7 +108,13 @@ function verdictClass(v: NonNullable<Report["verdict"]>) {
 
 export default function ReportView({ result }: { result: ReviewResult }) {
   const { report } = result;
-  const risks = [...report.risks].sort((a, b) => RATING_ORDER[a.rating] - RATING_ORDER[b.rating]);
+  // Highest rating first; within a rating, risks the checklist covers come last.
+  const risks = [...report.risks].sort(
+    (a, b) =>
+      RATING_ORDER[a.rating] - RATING_ORDER[b.rating] ||
+      Number(a.fixable_by_evidence) - Number(b.fixable_by_evidence),
+  );
+  const remaining = risks.filter((r) => !r.fixable_by_evidence);
   return (
     <div className="space-y-6">
       <div className="border-t border-fg pt-6">
@@ -164,16 +170,30 @@ export default function ReportView({ result }: { result: ReviewResult }) {
       )}
 
       {report.verdict_after_checklist && (
-        <div>
+        <div className="border-t border-fg pt-6">
           <p className="mb-2 text-sm lowercase opacity-70">once done</p>
           <h3 className={`big-title text-4xl sm:text-5xl ${verdictClass(report.verdict_after_checklist)}`}>
             {report.verdict_after_checklist}
           </h3>
+          <div className="mt-4 max-w-2xl">
+            {remaining.length > 0 ? (
+              <>
+                <p className="mb-1 text-sm lowercase opacity-70">remaining risks</p>
+                <List items={remaining.slice(0, 3).map((r) => r.issue)} />
+              </>
+            ) : (
+              <p className="text-[15px]">No remaining risks once the checklist is done.</p>
+            )}
+          </div>
         </div>
       )}
-      <p className="text-sm opacity-70">
-        Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
-      </p>
+
+      <div className="border-t border-fg pt-6">
+        <h3 className="text-sm font-semibold lowercase">full report</h3>
+        <p className="mt-2 text-sm opacity-70">
+          Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
+        </p>
+      </div>
 
       {report.unverified_citations.length > 0 && (
         <div className="bg-orange px-5 py-4 text-[15px] text-black">
@@ -187,10 +207,16 @@ export default function ReportView({ result }: { result: ReviewResult }) {
           items={risks.map((r) => ({
             label: r.issue,
             badge: <Badge level={r.rating} />,
+            dim: r.fixable_by_evidence,
             body: (
               <p className="text-sm lowercase">
                 {r.type}
-                {r.fixable_by_evidence && " · fixable with evidence"}
+                {r.fixable_by_evidence && (
+                  <>
+                    {" "}
+                    <Tag>covered by checklist</Tag>
+                  </>
+                )}
               </p>
             ),
           }))}
