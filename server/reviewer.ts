@@ -7,7 +7,7 @@ import {
   Report,
   COPY_ADVICE_TODO,
   computeReportVerdict,
-  computeVerdictAfterChecklist,
+  computeVerdictAfterTodos,
   type ReviewRequest,
   type ReviewResponse,
   type Usage,
@@ -78,6 +78,7 @@ Evidence and todo rules:
 - Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
 - A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: claim_kind "factual", not "rhetoric".
 - One issue per problem. Never combine an evidence problem (fixable_by_evidence = true) with a wording or caveat problem (false) in one issue; split them. Example: "90% stat needs a source" (true) vs "90% may only apply to England; the ad says UK" (false: reword or add a caveat on the ad). Only raise the wording or caveat issue if there is a real reason to suspect it, not as a generic possibility.
+- Every regulators issue must be referenced by at least one todo (via issue_ids), unless it genuinely can't be fixed (e.g. the core concept is the problem). In that case say so in the issue detail.
 - Do not add a Copy Advice todo; the system adds it.
 - Use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; otherwise "keep on file".
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
@@ -113,9 +114,10 @@ CAP Section 3 focus. For campaign ads, apply only these rules and ignore the res
 legal_flags: short "check with a lawyer if..." items (e.g. defamation if naming companies, charity campaigning rules, election-period rules). Only when relevant to this ad; otherwise an empty list.
 
 Length limits (strict):
-- bottom_line: 1-2 sentences. assessment: 2-3 sentences.
-- At most 5 issues per tab. issue.title: max 10 words. issue.detail: max 35 words.
-- todo.action: max 15 words. todo.detail, suggested_wording and suggested_reply: max 35 words each. likely_attack: max 25 words.
+- bottom_line: 1-2 sentences. assessment: max 2 sentences.
+- At most 4 issues per tab, highest-impact first; merge minor points. At most 6 todos per tab.
+- issue.title: max 10 words. issue.detail: max 30 words.
+- todo.action: max 15 words. todo.detail and suggested_wording: max 25 words each. suggested_reply: max 30 words. likely_attack: max 25 words.
 - claims[].notes: max 20 words.
 - working: max 5 items, one line each.
 - No preamble, reasoning or any text outside the JSON object.
@@ -290,7 +292,7 @@ export async function runReview(
         tabs: { ...tabs, regulators: { ...tabs.regulators, todo } },
         verdict,
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
-        verdict_after_checklist: computeVerdictAfterChecklist(tabs),
+        verdict_after_todos: computeVerdictAfterTodos(tabs),
         unverified_citations: checkCitations(parsed.data, docs),
       };
       const saved_as = opts.save === false ? "" : await saveReport(report, req, model, usage);

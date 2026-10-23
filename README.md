@@ -25,10 +25,21 @@ Not a lawyer, and not the final say. It flags risks; your team decides.
 
 ## Reading a report
 
-- **As it stands**: the verdict for the draft as submitted, with the main reasons.
-- **To lower the risk, make sure you have**: a checklist of evidence and sign-offs to hold *before launch*. You don't need these on the ad. Keep them on file and be ready to send them to the ASA if asked.
-- **Once done**: the verdict if every item on the checklist is sorted. Risks that need rewording (not evidence) stay, so this can still be high.
-- Below that: risks, claims, likely attacks, fixes, what's working, and legal flags.
+At the top, always visible:
+
+- **Bottom line**: the tool's judgement and the main thing to do, in a sentence or two.
+- **Before launch**: what to do, in short: how many lines to reword, how many sources to hold on file, and who has to approve (for example TfL or a lawyer).
+- **Once done**: the verdict if you do all of that. A problem with no fix in the to-do list still counts, so this can stay high.
+- **Right now**: the verdict for the draft as it stands, shown only when it differs.
+- One line per audience with its rating and its top problem.
+
+Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and media owners), **Public & press** and **Industry & critics**. The last two are likely reactions based on the ad's content, not tested against real responses. Each tab has:
+
+- **Overall assessment**.
+- **Problems**: each with a rating, the ad's exact words and the CAP rules involved.
+- **What to do**: tickable to-dos grouped as hold evidence, reword, get approval and prepare a response. You don't need the evidence on the ad. Keep it on file and be ready to send it to the ASA if asked.
+
+The Regulators tab also has the claims checked and any other legal checks. "What's working" comes after the tabs.
 
 ## Setup
 

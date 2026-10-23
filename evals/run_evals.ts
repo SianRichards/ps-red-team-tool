@@ -166,16 +166,16 @@ async function main() {
         }
         ok++;
         if (res.report.verdict === exp.expected_verdict) verdictOk++;
-        if (res.report.verdict_after_checklist === exp.expected_verdict_after_checklist) afterOk++;
+        if (res.report.verdict_after_todos === exp.expected_verdict_after_checklist) afterOk++;
         const u: Usage = res.usage;
         const row: any = {
           verdict: res.report.verdict,
-          verdict_after_checklist: res.report.verdict_after_checklist ?? null,
+          verdict_after_todos: res.report.verdict_after_todos ?? null,
           model_verdict: res.report.model_verdict ?? null,
           usage: u,
           report: res.report,
         };
-        let line = `  run ${i + 1}: ${res.report.verdict} -> ${res.report.verdict_after_checklist} | `;
+        let line = `  run ${i + 1}: ${res.report.verdict} -> ${res.report.verdict_after_todos} | `;
         try {
           const j = await judge(ai, res.report, exp.must_flag);
           j.caught.forEach((c, k) => c && caught[k]++);

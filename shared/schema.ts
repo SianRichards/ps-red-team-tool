@@ -93,8 +93,8 @@ export const Report = z.object({
   verdict: z.enum(VERDICTS),
   // The model's own verdict, kept when the code-computed verdict differs.
   model_verdict: z.enum(VERDICTS).optional(),
-  // Filled by the server: the verdict once every evidence-fixable issue is resolved.
-  verdict_after_checklist: z.enum(VERDICTS).optional(),
+  // Filled by the server: the verdict once every issue that has a reword, hold-evidence or approval to-do is resolved.
+  verdict_after_todos: z.enum(VERDICTS).optional(),
   // Filled by the server, not the model.
   unverified_citations: z.array(z.string()).default([]),
 });
@@ -112,25 +112,39 @@ export function computeVerdict(risks: { rating: string; type: string }[]): (type
 
 const CAP_RULE = /B?CAP/i;
 
+/** To-do types that resolve the issues they reference (prepare-response does not). */
+const RESOLVING_TYPES = new Set<string>(["reword", "hold evidence", "get approval"]);
+
 /**
  * Flatten all tabs to risks. Only regulators issues that cite a CAP/BCAP rule are regulatory;
- * public and industry issues never are. With `afterChecklist`, regulators issues that holding
- * evidence would remove are ignored.
+ * public and industry issues never are. Issues in `resolved` are left out.
  */
-export function tabRisks(tabs: Report["tabs"], afterChecklist = false) {
+export function tabRisks(tabs: Report["tabs"], resolved: Set<string> = new Set()) {
   return [
     ...tabs.regulators.issues
-      .filter((i) => !(afterChecklist && i.fixable_by_evidence))
+      .filter((i) => !resolved.has(i.id))
       .map((i) => ({
         rating: i.rating,
         type: i.rules.some((r) => CAP_RULE.test(r)) ? "regulatory" : "reputational",
       })),
-    ...[...tabs.public.issues, ...tabs.industry.issues].map((i) => ({ rating: i.rating, type: "reputational" })),
+    ...[...tabs.public.issues, ...tabs.industry.issues]
+      .filter((i) => !resolved.has(i.id))
+      .map((i) => ({ rating: i.rating, type: "reputational" })),
   ];
 }
 
 export const computeReportVerdict = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs));
-export const computeVerdictAfterChecklist = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs, true));
+
+/** Verdict once every issue referenced by a reword, hold-evidence or get-approval to-do is resolved. */
+export function computeVerdictAfterTodos(tabs: Report["tabs"]) {
+  const resolved = new Set(
+    Object.values(tabs)
+      .flatMap((tab) => tab.todo)
+      .filter((d) => RESOLVING_TYPES.has(d.type))
+      .flatMap((d) => d.issue_ids),
+  );
+  return computeVerdict(tabRisks(tabs, resolved));
+}
 
 const RATING_RANK = { High: 0, Medium: 1, Low: 2 } as const;
 
@@ -185,11 +199,12 @@ export interface Config {
 }
 
 /**
- * What it takes to reach the "once done" verdict: the number of hold-evidence to-dos and who has to
- * approve. The optional Copy Advice to-do is not counted.
+ * What to do before launch, from the to-dos: lines to reword, sources to hold, who has to approve.
+ * Copy Advice and prepare-response items are not counted.
  */
 export function pathToVerdict(report: Report) {
   const todos = Object.values(report.tabs).flatMap((tab) => tab.todo);
+  const rewords = todos.filter((d) => d.type === "reword").length;
   const sources = todos.filter((d) => d.type === "hold evidence").length;
   const approvers: string[] = [];
   for (const d of todos) {
@@ -197,7 +212,7 @@ export function pathToVerdict(report: Report) {
     const who = d.approver_known && d.approver ? d.approver : "the media owner";
     if (!approvers.includes(who)) approvers.push(who);
   }
-  return { sources, approvers };
+  return { rewords, sources, approvers };
 }
 
 /** "A", "A and B", "A, B and C". */

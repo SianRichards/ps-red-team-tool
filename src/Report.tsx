@@ -299,13 +299,13 @@ export default function ReportView({ result }: { result: ReviewResult }) {
     return { key: k, rating: tabRating(report.tabs[k].issues), top: issues[0]?.title ?? null, count: issues.length };
   });
 
-  const headline = report.verdict_after_checklist ?? report.verdict;
-  const { sources, approvers } = pathToVerdict(report);
-  const needs = [
-    sources > 0 && `${sources} ${sources === 1 ? "source" : "sources"} on file`,
-    approvers.length > 0 && `approval from ${joinAnd(approvers)}`,
+  const headline = report.verdict_after_todos ?? report.verdict;
+  const { rewords, sources, approvers } = pathToVerdict(report);
+  const steps = [
+    rewords > 0 && `reword ${rewords} ${rewords === 1 ? "line" : "lines"}`,
+    sources > 0 && `hold ${sources} ${sources === 1 ? "source" : "sources"}`,
+    approvers.length > 0 && `get approval from ${joinAnd(approvers)}`,
   ].filter(Boolean) as string[];
-  const path = needs.length ? `once you have ${joinAnd(needs)}` : null;
 
   return (
     <div className="space-y-8">
@@ -314,10 +314,17 @@ export default function ReportView({ result }: { result: ReviewResult }) {
           <span className="font-semibold">Bottom line: </span>
           {report.bottom_line}
         </p>
-        <h2 className={`big-title mt-4 text-6xl sm:text-7xl ${verdictClass(headline)}`}>{headline}</h2>
-        {path && <p className="mt-2 max-w-2xl text-[15px]">{path}</p>}
-        {report.verdict_after_checklist && report.verdict_after_checklist !== report.verdict && (
-          <p className="mt-2 text-sm opacity-70">Right now: {report.verdict}, until the evidence is confirmed.</p>
+        {steps.length > 0 && (
+          <p className="mt-4 max-w-2xl text-[15px]">
+            <span className="font-semibold">Before launch: </span>
+            {steps.join(" · ")}
+          </p>
+        )}
+        <h2 className={`big-title mt-4 text-5xl sm:text-6xl ${verdictClass(headline)}`}>
+          <span className="opacity-70">Once done:</span> {headline}
+        </h2>
+        {report.verdict_after_todos && report.verdict_after_todos !== report.verdict && (
+          <p className="mt-2 text-sm opacity-70">Right now: {report.verdict}</p>
         )}
         <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">
           {summaryRows.map((r) => (
