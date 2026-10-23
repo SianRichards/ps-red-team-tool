@@ -1,3 +1,7 @@
 .env
 node_modules
 dist
+
+# Saved reviews may contain confidential drafts; eval results are generated
+reviews/*.json
+evals/results/*.json
