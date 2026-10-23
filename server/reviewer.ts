@@ -31,7 +31,7 @@ const OUTPUT_SPEC = `
 Respond with a single JSON object and nothing else (no markdown fences, no commentary).
 Exact shape:
 {
-  "summary": string,
+  "bottom_line": string,
   "tabs": {
     "regulators": {
       "assessment": string,
@@ -47,7 +47,7 @@ Exact shape:
   "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review"
 }
 ISSUE = {"id": string, "title": string, "detail": string, "rating": "High"|"Medium"|"Low", "ad_quote": the ad's exact words or null, "rules": [string], "fixable_by_evidence": boolean}
-TODO = {"action": string, "type": "hold evidence"|"reword"|"get sign-off"|"prepare response", "issue_ids": [string], "detail": string, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "rules": [string]}
+TODO = {"action": string, "type": "hold evidence"|"reword"|"get approval"|"prepare response", "issue_ids": [string], "detail": string, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "rules": [string], "approver": string or null, "approver_known": boolean}
 
 Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort issues High first.
 
@@ -65,8 +65,15 @@ Evidence and todo rules:
 - CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
 - If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), set fixable_by_evidence = false: the todo is "reword".
 - Distress, offence and imagery issues are never fixable by evidence (fixable_by_evidence = false).
-- Only add a "hold evidence" or "get sign-off" todo if holding evidence or sign-off would fix the issue. A claim that needs rewording gets a "reword" todo only.
-- Media-owner acceptance (TfL, Global and similar) and legal review are "get sign-off" todos with empty rules. They are not CAP rules: do not tag them CAP 1.8 or similar.
+- Only add a "hold evidence" or "get approval" todo if holding evidence or approval would fix the issue. A claim that needs rewording gets a "reword" todo only.
+- Approval todos ("get approval") have empty rules (they are not CAP rules; do not tag them CAP 1.8 or similar), an "approver" (short name) and "approver_known". Both are null/false for other todo types. Name the approver in the action, e.g. "Get TfL approval of the final artwork".
+- Legal review is a "get approval" todo with approver "a lawyer" and approver_known true.
+- Media-owner approval comes from the Placement field in the request. Never guess an owner the placement doesn't imply:
+  - London Underground -> approver "TfL", approver_known true.
+  - Facebook or Instagram ads -> "Meta's ad review"; YouTube or Google ads -> "Google's ad review"; TikTok ads -> "TikTok's ad review" (approver_known true).
+  - Placement known but owner not (e.g. "billboard", "bus stop") -> approver "the site owner (e.g. Global, JCDecaux, Clear Channel)", approver_known false.
+  - Placement blank or unclear -> approver "the media owner or platform (e.g. TfL, Global, Meta's ad review)", approver_known false.
+  - Own channels (own website, organic posts on the advertiser's own accounts) -> no media-owner approval todo; at most a low-priority note to check the platform's community guidelines.
 - Each "hold evidence" detail must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
 - Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
 - A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: claim_kind "factual", not "rhetoric".
@@ -74,6 +81,12 @@ Evidence and todo rules:
 - Do not add a Copy Advice todo; the system adds it.
 - Use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; otherwise "keep on file".
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
+
+Bottom line:
+- bottom_line gives your judgement and the main action. Do not describe the ad; the user knows it. Example: "A strong, defensible ad. Before launch, get sources on file for the 90% figure and the committee quote, and be ready for the industry to say CO2 stunning is legal."
+
+Issue titles:
+- Plain statements a campaigner understands at a glance, max about 10 words. Examples: "The 90% figure needs a UK-wide source on file", "'Gas chambers' may offend some people", "Expect 'it's legal, approved and being phased out'".
 
 Plain English rules:
 - Write for a campaigner, not a lawyer. Short sentences, no jargon.
@@ -100,8 +113,8 @@ CAP Section 3 focus. For campaign ads, apply only these rules and ignore the res
 legal_flags: short "check with a lawyer if..." items (e.g. defamation if naming companies, charity campaigning rules, election-period rules). Only when relevant to this ad; otherwise an empty list.
 
 Length limits (strict):
-- summary: max 2 sentences. assessment: 2-3 sentences.
-- At most 5 issues per tab. issue.title: max 12 words. issue.detail: max 35 words.
+- bottom_line: 1-2 sentences. assessment: 2-3 sentences.
+- At most 5 issues per tab. issue.title: max 10 words. issue.detail: max 35 words.
 - todo.action: max 15 words. todo.detail, suggested_wording and suggested_reply: max 35 words each. likely_attack: max 25 words.
 - claims[].notes: max 20 words.
 - working: max 5 items, one line each.
@@ -192,7 +205,7 @@ export function checkCitations(report: Report, docs: Record<string, string>): st
   }
   const corpus = Object.values(docs).join("\n").toLowerCase();
   const texts = [
-    report.summary,
+    report.bottom_line,
     ...report.tabs.regulators.claims.map((c) => c.notes),
     ...report.tabs.regulators.legal_flags,
     ...Object.values(report.tabs).flatMap((tab) => [

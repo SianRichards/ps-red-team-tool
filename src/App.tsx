@@ -100,17 +100,17 @@ export default function App() {
             <h2 className="big-title lowercase mb-6 text-5xl">red team</h2>
             <div className="divide-y divide-fg border-y border-fg [&>label]:block [&>label]:py-3">
               <label className="text-sm">
-                Campaign name
-                <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
-              </label>
-              <label className="text-sm">
-                Placement
+                <span className="font-semibold">Placement</span>
                 <input
                   className={field}
-                  placeholder="e.g. Instagram, public transportation"
+                  placeholder="e.g. London Underground, Instagram ads, billboard, own website"
                   value={placement}
                   onChange={(e) => setPlacement(e.target.value)}
                 />
+              </label>
+              <label className="text-sm">
+                Campaign name
+                <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
               </label>
               <label className="text-sm">
                 Target audience

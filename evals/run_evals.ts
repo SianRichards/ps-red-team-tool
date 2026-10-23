@@ -74,7 +74,7 @@ async function loadCase(name: string): Promise<{ req: Omit<ReviewRequest, "effor
 }
 
 function reportText(r: Report): string {
-  const lines = [`Summary: ${r.summary}`];
+  const lines = [`Bottom line: ${r.bottom_line}`];
   for (const [name, tab] of Object.entries(r.tabs)) {
     lines.push(`[${name}] ${tab.assessment}`);
     for (const i of tab.issues)

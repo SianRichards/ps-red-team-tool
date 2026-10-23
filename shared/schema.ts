@@ -22,11 +22,11 @@ export const Issue = z.object({
   // The ad's exact words that the issue is about.
   ad_quote: z.string().nullable().default(null),
   rules: z.array(z.string()).default([]),
-  // True if holding the right evidence or sign-off would remove this issue (regulators tab only).
+  // True if holding the right evidence or approval would remove this issue (regulators tab only).
   fixable_by_evidence: z.boolean().default(false),
 });
 
-export const TODO_TYPES = ["hold evidence", "reword", "get sign-off", "prepare response"] as const;
+export const TODO_TYPES = ["hold evidence", "reword", "get approval", "prepare response"] as const;
 export const EVIDENCE_WHERE = ["keep on file", "keep on file + publish on website (recommended)"] as const;
 
 export const Todo = z.object({
@@ -42,6 +42,9 @@ export const Todo = z.object({
   likely_attack: z.string().nullable().default(null),
   suggested_reply: z.string().nullable().default(null),
   rules: z.array(z.string()).default([]),
+  // get approval only: who approves, and whether the placement tells us (e.g. "TfL", "a lawyer").
+  approver: z.string().nullable().default(null),
+  approver_known: z.boolean().default(false),
 });
 
 export const Tab = z.object({
@@ -60,7 +63,7 @@ export type TabKey = (typeof TAB_KEYS)[number];
 
 export const COPY_ADVICE_TODO = {
   action: "Get a free pre-launch check from CAP's Copy Advice service",
-  type: "get sign-off",
+  type: "get approval",
   issue_ids: [] as string[],
   detail: "Ask for written advice on the final version. Don't describe the ad as ASA/CAP approved afterwards.",
   where: null,
@@ -68,6 +71,8 @@ export const COPY_ADVICE_TODO = {
   likely_attack: null,
   suggested_reply: null,
   rules: [] as string[],
+  approver: "CAP Copy Advice",
+  approver_known: true,
 } as const;
 
 export const VERDICTS = [
@@ -78,7 +83,7 @@ export const VERDICTS = [
 ] as const;
 
 export const Report = z.object({
-  summary: z.string(),
+  bottom_line: z.string(),
   tabs: z.object({
     regulators: RegulatorsTab,
     public: Tab,
@@ -177,4 +182,25 @@ export interface ReviewResult {
 
 export interface Config {
   models: Record<ModelChoice, string>;
+}
+
+/**
+ * What it takes to reach the "once done" verdict: the number of hold-evidence to-dos and who has to
+ * approve. The optional Copy Advice to-do is not counted.
+ */
+export function pathToVerdict(report: Report) {
+  const todos = Object.values(report.tabs).flatMap((tab) => tab.todo);
+  const sources = todos.filter((d) => d.type === "hold evidence").length;
+  const approvers: string[] = [];
+  for (const d of todos) {
+    if (d.type !== "get approval" || /copy advice/i.test(d.action)) continue;
+    const who = d.approver_known && d.approver ? d.approver : "the media owner";
+    if (!approvers.includes(who)) approvers.push(who);
+  }
+  return { sources, approvers };
+}
+
+/** "A", "A and B", "A, B and C". */
+export function joinAnd(xs: string[]): string {
+  return xs.length > 1 ? `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}` : (xs[0] ?? "");
 }

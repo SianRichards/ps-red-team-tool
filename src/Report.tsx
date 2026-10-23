@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { TAB_KEYS, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
+import { TAB_KEYS, joinAnd, pathToVerdict, tabRating, type Issue, type Report, type ReviewResult, type TabKey, type Todo } from "../shared/schema";
 
 const RATING_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 const BADGE = {
@@ -25,7 +25,7 @@ const TABS: Record<TabKey, { label: string; who: string; note?: string }> = {
 const TODO_GROUPS: { type: Todo["type"]; heading: string }[] = [
   { type: "hold evidence", heading: "Hold evidence" },
   { type: "reword", heading: "Reword" },
-  { type: "get sign-off", heading: "Get sign-off" },
+  { type: "get approval", heading: "Get approval" },
   { type: "prepare response", heading: "Prepare a response" },
 ];
 
@@ -299,23 +299,26 @@ export default function ReportView({ result }: { result: ReviewResult }) {
     return { key: k, rating: tabRating(report.tabs[k].issues), top: issues[0]?.title ?? null, count: issues.length };
   });
 
+  const headline = report.verdict_after_checklist ?? report.verdict;
+  const { sources, approvers } = pathToVerdict(report);
+  const needs = [
+    sources > 0 && `${sources} ${sources === 1 ? "source" : "sources"} on file`,
+    approvers.length > 0 && `approval from ${joinAnd(approvers)}`,
+  ].filter(Boolean) as string[];
+  const path = needs.length ? `once you have ${joinAnd(needs)}` : null;
+
   return (
     <div className="space-y-8">
       <div className="border-t border-fg pt-6">
-        <p className="mb-2 text-sm opacity-70">As it stands</p>
-        <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(report.verdict)}`}>{report.verdict}</h2>
-        {report.verdict_after_checklist && (
-          <div className="mt-6">
-            <p className="mb-1 text-sm opacity-70">Once done</p>
-            <h3 className={`big-title text-4xl sm:text-5xl ${verdictClass(report.verdict_after_checklist)}`}>
-              {report.verdict_after_checklist}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm opacity-70">
-              The verdict if all the evidence on the checklist is in place. Problems that need rewording stay.
-            </p>
-          </div>
+        <p className="mb-2 max-w-2xl text-[15px]">
+          <span className="font-semibold">Bottom line: </span>
+          {report.bottom_line}
+        </p>
+        <h2 className={`big-title mt-4 text-6xl sm:text-7xl ${verdictClass(headline)}`}>{headline}</h2>
+        {path && <p className="mt-2 max-w-2xl text-[15px]">{path}</p>}
+        {report.verdict_after_checklist && report.verdict_after_checklist !== report.verdict && (
+          <p className="mt-2 text-sm opacity-70">Right now: {report.verdict}, until the evidence is confirmed.</p>
         )}
-        <p className="mt-6 max-w-2xl text-[15px]">{report.summary}</p>
         <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">
           {summaryRows.map((r) => (
             <li key={r.key} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
@@ -327,14 +330,6 @@ export default function ReportView({ result }: { result: ReviewResult }) {
             </li>
           ))}
         </ul>
-        {report.model_verdict && (
-          <p className="mt-2 text-sm opacity-70">
-            Verdict is computed from the issue ratings. The model's own verdict was "{report.model_verdict}".
-          </p>
-        )}
-        <p className="mt-4 text-sm opacity-70">
-          Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
-        </p>
       </div>
 
       {report.unverified_citations.length > 0 && (
@@ -388,6 +383,10 @@ export default function ReportView({ result }: { result: ReviewResult }) {
       <Section title="What's working" open>
         <List items={report.working} />
       </Section>
+
+      <p className="text-xs opacity-70">
+        Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
+      </p>
     </div>
   );
 }
