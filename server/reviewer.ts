@@ -47,14 +47,14 @@ Exact shape:
   "working": [string],
   "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review"
 }
-ITEM = {"id": string, "action": string, "type": "hold evidence"|"reword"|"get approval"|"prepare response"|"rethink", "rating": "High"|"Medium"|"Low", "ad_quote": the ad's exact words or null, "detail": string, "why": string or null, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "approver": string or null, "approver_known": boolean, "rules": [string]}
+ITEM = {"id": string, "action": string, "type": "hold evidence"|"reword"|"get approval"|"prepare response"|"rethink", "rating": "High"|"Medium"|"Low", "ad_quote": the ad's exact words or null, "detail": string, "why": string or null, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "approver": string or null, "approver_known": boolean, "rules": [string], "rulings": [{"name": string, "url": string}]}
 
 Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort items High first.
 
 Items: one item per problem, with its action. Never describe a problem separately from its action.
-- "action" is a plain title of what to do, max about 10 words. Examples: "Hold a UK-wide source for the 90% figure", "Reword 'gas chambers' to avoid offence", "Prepare a reply to 'it's legal, approved and being phased out'".
+- "action" is a plain title of what to do, max about 10 words. Examples: "Check the 90% figure has a UK-wide source on file", "Reword 'gas chambers' to avoid offence", "Prepare a reply to 'it's legal, approved and being phased out'".
 - "detail" says what is needed. "why" is extra context on the problem; fill it only if it adds something the action and detail don't already say, otherwise null.
-- Types: "hold evidence" (a factual claim needs evidence held; set "where"); "reword" (set "suggested_wording", the sharpest defensible version); "get approval" (set "approver" and "approver_known"); "prepare response" (set "likely_attack" and "suggested_reply"); "rethink" (the problem can't be fixed by an action, e.g. the core concept is the problem; "detail" says what would need to change). Unused fields are null (approver_known false).
+- Types: "hold evidence" (a "check" item: a factual claim whose evidence we can't see needs checking and keeping on file; set "where"); "reword" (set "suggested_wording", the sharpest defensible version); "get approval" (set "approver" and "approver_known"); "prepare response" (set "likely_attack" and "suggested_reply"); "rethink" (the problem can't be fixed by an action, e.g. the core concept is the problem; "detail" says what would need to change). Unused fields are null (approver_known false).
 - Item ids are unique across the whole report: r1, r2... for regulators, p1... for public, i1... for industry.
 
 Tabs (each audience appears once; do not repeat points across tabs):
@@ -64,6 +64,15 @@ Tabs (each audience appears once; do not repeat points across tabs):
 - Each problem appears once, in the most relevant tab. If the industry will attack a claim the ASA might also judge, put the regulatory item in regulators and only the attack and reply in industry.
 - Regulators-tab items, and any item that cites a CAP/BCAP rule, must be "reword", "hold evidence", "get approval" or "rethink", never "prepare response". If a CAP breach is likely and can't be fixed by rewording or evidence, use "rethink".
 - Public and industry items are mostly "prepare response" (likely_attack and suggested_reply), plus "reword" where a change would avoid the attack. They are anticipated reactions, not predictions. Keep them specific to this ad. If there is nothing specific to say, return an empty items list.
+
+Check, don't assume:
+- You can't see the advertiser's sources. If something might be wrong but you don't know (a quote's accuracy, a stat's scope or date), it is a "check" item of type "hold evidence", not a reword. Use wording like "Check that..." or "Confirm...".
+- Use "reword" only when the wording itself is a problem whatever the evidence shows (e.g. it implies something no source could support, or implies endorsement).
+- In bottom_line, use "check" language for unknowns. Don't imply something is wrong unless the ad's wording itself is the problem.
+
+Rulings in plain English:
+- Whenever an item or the bottom line mentions a past ruling, describe it in plain words: who, what the ad was, the outcome and why, in one short clause. Example: "A similar PETA poster (a fish that turns into a cat, 2023) was cleared because the image wasn't graphic." Never just "the PETA ruling" or "the Viva! one".
+- List each ruling an item draws on in its "rulings" array: "name" is a short plain label (e.g. "PETA fish-to-cat poster, 2023, not upheld") and "url" is the Link from that ruling's card in the reference docs, copied exactly. Never invent a url. Empty array if none.
 
 Evidence and approval rules:
 - Assess the ad as submitted. Missing evidence for a factual claim is a "hold evidence" item. Use evidence_status "Not checked" when no source has been provided.
@@ -82,13 +91,13 @@ Evidence and approval rules:
 - Each "hold evidence" detail must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
 - Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
 - A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: claim_kind "factual", not "rhetoric".
-- One item per problem. Never combine an evidence problem ("hold evidence") with a wording or caveat problem ("reword") in one item; split them. Example: "90% stat needs a source" (hold evidence) vs "90% may only apply to England; the ad says UK" (reword or add a caveat on the ad). Only raise the wording or caveat item if there is a real reason to suspect it, not as a generic possibility.
+- One item per problem. Never combine an evidence problem ("hold evidence") with a wording or caveat problem ("reword") in one item; split them. Example: "Check the 90% stat has a source on file" (hold evidence) vs "90% may only apply to England; the ad says UK" (reword or add a caveat on the ad). Only raise the wording or caveat item if there is a real reason to suspect it, not as a generic possibility.
 - Do not add a Copy Advice item; the system adds it.
 - Use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; otherwise "keep on file".
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
 
 Bottom line:
-- bottom_line is one or two sentences of judgement: the ad's overall strength and its single biggest weak point. Do not describe the ad (the user knows it) and do not list actions (the "Before launch" line does that). Example: "A strong, defensible ad. The weakest point is the 90% figure, and the industry will say CO2 stunning is legal."
+- bottom_line is one or two sentences of judgement: the ad's overall strength and its single biggest weak point. Do not describe the ad (the user knows it) and do not list actions (the "Before launch" line does that). Example: "A strong, defensible ad. The weakest point is the 90% figure, which needs checking, and the industry will say CO2 stunning is legal."
 
 Plain English rules:
 - Write for a campaigner, not a lawyer. Short sentences, no jargon.
@@ -215,6 +224,11 @@ export function checkCitations(report: Report, docs: Record<string, string>): st
       ...tab.items.flatMap((i) => [i.detail, i.why ?? ""]),
     ]),
   ];
+  for (const tab of Object.values(report.tabs))
+    for (const item of tab.items)
+      for (const r of item.rulings)
+        if (!corpus.includes(r.url.toLowerCase()))
+          problems.add(`Ruling link '${r.url}' is not in reference/, treat as unverified`);
   const re = /ASA ruling (?:on|against)\s+([A-Z][\w&'.\- ]{2,60})/g;
   for (const t of texts)
     for (const m of t.matchAll(re)) {

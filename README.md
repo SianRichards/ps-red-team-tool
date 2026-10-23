@@ -33,14 +33,14 @@ At the top, always visible:
   - **Nearly ready**: only evidence to hold, approvals to get, minor rewording or a response to prepare for a likely attack are left. A serious attack to prepare for never pushes the headline above this.
   - **Ready to launch**: nothing left to do.
 - **Bottom line**: the tool's judgement in a sentence or two: how strong the ad is and its biggest weak point.
-- **Before launch**: what to do, in short: how many lines to reword, how many sources to hold on file, who has to approve (for example TfL or a lawyer), and how many serious attacks to prepare a response for.
+- **Before launch**: what to do, in short: how many lines to reword, how many sources to check and keep on file, who has to approve (for example TfL or a lawyer), and how many serious attacks to prepare a response for.
 - One line per audience with its rating and its most important item.
 
 Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and media owners), **Public & press** and **Industry & critics**. The last two are likely reactions based on the ad's content, not tested against real responses. Each tab has an overall assessment and one list of things to do. Each item is a problem together with its action, with a rating, the ad's exact words, and the CAP rules involved (click a rule to open it on the ASA site). Items are grouped as:
 
 - **Rethink**: the concept itself is the problem.
 - **Reword**: with suggested wording.
-- **Hold evidence**: keep it on file before launch. You don't need it on the ad; be ready to send it to the ASA if asked.
+- **Check and keep on file**: things the tool can't verify (a stat's scope or date, a quote's accuracy). Check them and keep the evidence on file before launch. You don't need it on the ad; be ready to send it to the ASA if asked.
 - **Get approval**: from the media owner, a lawyer, and so on.
 - **Prepare a response**: a likely attack and a suggested reply.
 

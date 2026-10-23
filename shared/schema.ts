@@ -41,6 +41,8 @@ export const Item = z.object({
   approver: z.string().nullable().default(null),
   approver_known: z.boolean().default(false),
   rules: z.array(z.string()).default([]),
+  // Past ASA rulings the item draws on (name and the Link from the ruling card).
+  rulings: z.array(z.object({ name: z.string(), url: z.string() })).default([]),
 });
 
 export const Tab = z.object({
@@ -71,6 +73,7 @@ export const COPY_ADVICE_ITEM = {
   approver: "CAP Copy Advice",
   approver_known: true,
   rules: [] as string[],
+  rulings: [] as { name: string; url: string }[],
 } as const;
 
 export const isCopyAdvice = (i: { action: string }) => /copy advice/i.test(i.action);

@@ -35,7 +35,7 @@ const TABS: Record<TabKey, { label: string; who: string; note?: string }> = {
 const GROUPS: { type: Item["type"]; heading: string }[] = [
   { type: "rethink", heading: "Rethink" },
   { type: "reword", heading: "Reword" },
-  { type: "hold evidence", heading: "Hold evidence" },
+  { type: "hold evidence", heading: "Check and keep on file" },
   { type: "get approval", heading: "Get approval" },
   { type: "prepare response", heading: "Prepare a response" },
 ];
@@ -83,6 +83,28 @@ function RuleTags({ rules }: { rules: string[] }) {
           </span>
         );
       })}
+    </span>
+  );
+}
+
+function RulingTags({ rulings }: { rulings: Item["rulings"] }) {
+  // Only link to https pages, whatever the model returned.
+  const valid = rulings.filter((r) => /^https:\/\//i.test(r.url));
+  if (!valid.length) return null;
+  return (
+    <span className="inline-flex flex-wrap gap-1 align-middle">
+      {valid.map((r) => (
+        <a
+          key={r.url}
+          href={r.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open the ruling on the ASA site"
+          className="whitespace-nowrap border border-fg/40 px-1.5 py-0.5 text-xs text-fg/70 underline-offset-2 hover:text-fg hover:underline"
+        >
+          {r.name}
+        </a>
+      ))}
     </span>
   );
 }
@@ -191,9 +213,10 @@ function ItemCard({ item }: { item: Item }) {
             {item.approver}
           </p>
         )}
-        {item.rules.length > 0 && (
-          <p>
+        {(item.rules.length > 0 || item.rulings.length > 0) && (
+          <p className="flex flex-wrap items-center gap-1">
             <RuleTags rules={item.rules} />
+            <RulingTags rulings={item.rulings} />
           </p>
         )}
         {item.why && (
@@ -318,7 +341,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   const { rewords, sources, approvers, responses } = pathToVerdict(report);
   const steps = [
     rewords > 0 && `reword ${rewords} ${rewords === 1 ? "line" : "lines"}`,
-    sources > 0 && `hold ${sources} ${sources === 1 ? "source" : "sources"}`,
+    sources > 0 && `check ${sources} ${sources === 1 ? "source" : "sources"}`,
     approvers.length > 0 && `get approval from ${joinAnd(approvers)}`,
     responses > 0 && `prepare ${responses} ${responses === 1 ? "response" : "responses"}`,
   ].filter(Boolean) as string[];
