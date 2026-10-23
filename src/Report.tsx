@@ -142,8 +142,8 @@ function Label({ children }: { children: ReactNode }) {
   return <span className="block text-sm text-accent-text">{children}</span>;
 }
 
-function verdictClass(v: Report["verdict"]) {
-  if (v === "Needs changes" || v === "Ready with minor fixes") return "text-accent-text";
+function verdictClass(v: NonNullable<Report["headline"]>) {
+  if (v === "Needs changes" || v === "Nearly ready") return "text-accent-text";
   return "text-fg";
 }
 
@@ -314,7 +314,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
     };
   });
 
-  const headline = report.verdict_after_todos ?? report.verdict;
+  const headline = report.headline ?? "Needs changes";
   const { rewords, sources, approvers } = pathToVerdict(report);
   const steps = [
     rewords > 0 && `reword ${rewords} ${rewords === 1 ? "line" : "lines"}`,
@@ -325,7 +325,8 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   return (
     <div className="space-y-8">
       <div className="border-t border-fg pt-6">
-        <p className="mb-2 max-w-2xl text-[15px]">
+        <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(headline)}`}>{headline}</h2>
+        <p className="mt-4 max-w-2xl text-[15px]">
           <span className="font-semibold">Bottom line: </span>
           {report.bottom_line}
         </p>
@@ -334,12 +335,6 @@ export default function ReportView({ result }: { result: ReviewResult }) {
             <span className="font-semibold">Before launch: </span>
             {steps.join(" · ")}
           </p>
-        )}
-        <h2 className={`big-title mt-4 text-5xl sm:text-6xl ${verdictClass(headline)}`}>
-          <span className="opacity-70">Once done:</span> {headline}
-        </h2>
-        {report.verdict_after_todos && report.verdict_after_todos !== report.verdict && (
-          <p className="mt-2 text-sm opacity-70">Right now: {report.verdict}</p>
         )}
         <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">
           {summaryRows.map((r) => (

@@ -21,7 +21,7 @@ app.post("/api/review", async (req, res) => {
   };
   try {
     const { report, usage, model, saved_as } = await runReview(body);
-    const verdicts = `${report.verdict}${report.model_verdict ? ` (model said: ${report.model_verdict})` : ""}`;
+    const verdicts = `${report.headline} / ${report.verdict}${report.model_verdict ? ` (model said: ${report.model_verdict})` : ""}`;
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
     const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;

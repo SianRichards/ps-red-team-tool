@@ -82,6 +82,8 @@ export const VERDICTS = [
   "High risk, get legal review",
 ] as const;
 
+export const HEADLINES = ["High risk", "Needs changes", "Nearly ready", "Ready to launch"] as const;
+
 export const Report = z.object({
   bottom_line: z.string(),
   tabs: z.object({
@@ -91,6 +93,8 @@ export const Report = z.object({
   }),
   working: z.array(z.string()).default([]),
   verdict: z.enum(VERDICTS),
+  // Filled by the server: the short headline shown first (see computeHeadline).
+  headline: z.enum(HEADLINES).optional(),
   // The model's own verdict, kept when the code-computed verdict differs.
   model_verdict: z.enum(VERDICTS).optional(),
   // Filled by the server: the verdict once every reword, hold-evidence and get-approval item is done.
@@ -137,6 +141,27 @@ export const computeReportVerdict = (tabs: Report["tabs"]) => computeVerdict(tab
 
 /** Verdict once every reword, hold-evidence and get-approval item is done. */
 export const computeVerdictAfterTodos = (tabs: Report["tabs"]) => computeVerdict(tabRisks(tabs, true));
+
+/**
+ * The short headline verdict, from the tab items (the optional Copy Advice check is ignored):
+ * - High risk: any "rethink" item, or any High regulatory item that is not a reword, hold-evidence
+ *   or get-approval item
+ * - Needs changes: any reword item rated High or Medium
+ * - Nearly ready: only hold-evidence and get-approval items (plus Low rewords) left
+ * - Ready to launch: none of the above
+ */
+export function computeHeadline(tabs: Report["tabs"]): (typeof HEADLINES)[number] {
+  const regulators = tabs.regulators.items.filter((i) => !isCopyAdvice(i));
+  const others = [...tabs.public.items, ...tabs.industry.items];
+  const all = [...regulators, ...others];
+  const isRegulatory = (i: Item) => regulators.includes(i) && i.rules.some((r) => CAP_RULE.test(r));
+  if (all.some((i) => i.type === "rethink" || (i.rating === "High" && isRegulatory(i) && !DONE_TYPES.has(i.type))))
+    return "High risk";
+  if (all.some((i) => i.type === "reword" && i.rating !== "Low")) return "Needs changes";
+  if (all.some((i) => i.type === "hold evidence" || i.type === "get approval" || i.type === "reword"))
+    return "Nearly ready";
+  return "Ready to launch";
+}
 
 const RATING_RANK = { High: 0, Medium: 1, Low: 2 } as const;
 

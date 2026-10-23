@@ -170,12 +170,13 @@ async function main() {
         const u: Usage = res.usage;
         const row: any = {
           verdict: res.report.verdict,
+          headline: res.report.headline ?? null,
           verdict_after_todos: res.report.verdict_after_todos ?? null,
           model_verdict: res.report.model_verdict ?? null,
           usage: u,
           report: res.report,
         };
-        let line = `  run ${i + 1}: ${res.report.verdict} -> ${res.report.verdict_after_todos} | `;
+        let line = `  run ${i + 1}: ${res.report.headline} | ${res.report.verdict} -> ${res.report.verdict_after_todos} | `;
         try {
           const j = await judge(ai, res.report, exp.must_flag);
           j.caught.forEach((c, k) => c && caught[k]++);
@@ -207,6 +208,9 @@ async function main() {
         must_flag: exp.must_flag.map((item, k) => ({ item, catch_rate: judged ? caught[k] / judged : null })),
         avg_completion_tokens: avg(good.map((r) => r.usage.completion_tokens)),
         avg_cost: avg(good.map((r) => r.usage.cost ?? 0)),
+        headlines: Object.fromEntries(
+          [...new Set(good.map((r) => r.headline))].map((h) => [h, good.filter((r) => r.headline === h).length]),
+        ),
         runs_detail: runRows,
       };
       results.push(summary);
@@ -215,6 +219,7 @@ async function main() {
         effort,
         "ok/runs": `${ok}/${runs}`,
         "judge_error": judgeErrors,
+        headline: Object.entries(summary.headlines).map(([h, n]) => `${h} x${n}`).join(", ") || "-",
         verdict: ok ? pct(verdictOk, ok) : "-",
         "after to-dos": ok && exp.expected_verdict_after_todos ? pct(afterOk, ok) : "-",
         "issues caught": judged ? pct(caught.reduce((a, b) => a + b, 0), judged * exp.must_flag.length) : "-",

@@ -7,6 +7,7 @@ import {
   Report,
   COPY_ADVICE_ITEM,
   isCopyAdvice,
+  computeHeadline,
   computeReportVerdict,
   computeVerdictAfterTodos,
   type ReviewRequest,
@@ -86,7 +87,7 @@ Evidence and approval rules:
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
 
 Bottom line:
-- bottom_line gives your judgement and the main action. Do not describe the ad; the user knows it. Example: "A strong, defensible ad. Before launch, get sources on file for the 90% figure and the committee quote, and be ready for the industry to say CO2 stunning is legal."
+- bottom_line is one or two sentences of judgement: the ad's overall strength and its single biggest weak point. Do not describe the ad (the user knows it) and do not list actions (the "Before launch" line does that). Example: "A strong, defensible ad. The weakest point is the 90% figure, and the industry will say CO2 stunning is legal."
 
 Plain English rules:
 - Write for a campaigner, not a lawyer. Short sentences, no jargon.
@@ -287,6 +288,7 @@ export async function runReview(
       const report: Report = {
         ...parsed.data,
         tabs: { ...tabs, regulators: { ...tabs.regulators, items } },
+        headline: computeHeadline({ ...tabs, regulators: { ...tabs.regulators, items } }),
         verdict,
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
         verdict_after_todos: computeVerdictAfterTodos(tabs),
