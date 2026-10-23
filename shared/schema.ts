@@ -2,8 +2,12 @@ import { z } from "zod";
 
 export const Rating = z.enum(["High", "Medium", "Low"]);
 
+export const CLAIM_KINDS = ["factual", "opinion", "rhetoric"] as const;
+
 export const Claim = z.object({
   claim: z.string(),
+  // Only factual claims need evidence or a checklist item.
+  claim_kind: z.enum(CLAIM_KINDS).default("factual"),
   evidence_status: z.enum(["Sourced", "Weak", "Missing", "Not checked"]),
   risk: Rating,
   notes: z.string().default(""),
@@ -23,8 +27,23 @@ export const Risk = z.object({
   fixable_by_evidence: z.boolean().default(false),
 });
 
+export const CHECKLIST_WHERE = [
+  "keep on file",
+  "keep on file + publish on website (recommended)",
+  "get sign-off",
+] as const;
+
+export const COPY_ADVICE_ITEM = {
+  item: "Free pre-launch check with CAP's Copy Advice service",
+  related_claim: null,
+  why: "A second opinion on the final wording and image before launch.",
+  evidence_needed: "Written Copy Advice on the final version. Don't describe the ad as ASA/CAP approved afterwards.",
+  where: "get sign-off",
+} as const;
+
 export const ChecklistItem = z.object({
   item: z.string(),
+  where: z.enum(CHECKLIST_WHERE).default("keep on file"),
   related_claim: z.string().nullable().default(null),
   why: z.string(),
   evidence_needed: z.string(),

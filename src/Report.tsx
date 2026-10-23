@@ -14,6 +14,14 @@ function Badge({ level }: { level: keyof typeof BADGE }) {
   );
 }
 
+function Tag({ children }: { children: ReactNode }) {
+  return (
+    <span className="ml-1 inline-block whitespace-nowrap border border-fg px-2 py-0.5 text-xs lowercase">
+      {children}
+    </span>
+  );
+}
+
 function Section({
   title,
   index,
@@ -122,18 +130,29 @@ export default function ReportView({ result }: { result: ReviewResult }) {
 
       {report.checklist.length > 0 && (
         <div className="border border-fg p-5">
-          <p className="mb-3 text-sm font-semibold lowercase">to lower the risk, make sure you have:</p>
+          <p className="mb-2 text-sm font-semibold lowercase">to lower the risk, make sure you have:</p>
+          <p className="mb-4 max-w-2xl text-[15px] opacity-90">
+            You don't need these on the ad. Keep them on file before launch and be ready to send them to the ASA if
+            asked. For posters, putting supporting detail on your website counts in your favour, but it can't fix a
+            headline that's misleading without a caveat.
+          </p>
           <ul className="space-y-4 text-[15px]">
             {report.checklist.map((c, i) => (
               <li key={i}>
                 <label className="flex items-start gap-3">
                   <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="font-medium">{c.item}</span>
-                    {c.related_claim && <span className="opacity-70"> (re: {c.related_claim})</span>}
-                    <span className="mt-1 block opacity-90">{c.why}</span>
-                    <span className="mt-1 block">
-                      <span className="text-sm lowercase text-accent-text">evidence needed: </span>
+                  <span className="space-y-2">
+                    <span className="block">
+                      <span className="font-medium">{c.item}</span>
+                      {c.related_claim && <span className="opacity-70"> (re: {c.related_claim})</span>}{" "}
+                      <Tag>{c.where}</Tag>
+                    </span>
+                    <span className="block">
+                      <span className="block text-sm lowercase text-accent-text">why</span>
+                      {c.why}
+                    </span>
+                    <span className="block">
+                      <span className="block text-sm lowercase text-accent-text">evidence needed</span>
                       {c.evidence_needed}
                     </span>
                   </span>
@@ -179,9 +198,9 @@ export default function ReportView({ result }: { result: ReviewResult }) {
       </Section>
       <Section title="claims" index={2} open>
         <Table
-          head={["Claim", "Evidence", "Risk", "Notes", "Source"]}
+          head={["Claim", "Kind", "Evidence", "Risk", "Notes", "Source"]}
           rows={report.claims.map((c) => ({
-            cells: [c.claim, c.evidence_status, <Badge level={c.risk} />, c.notes, c.source_ref ?? "-"],
+            cells: [c.claim, <Tag>{c.claim_kind}</Tag>, c.evidence_status, <Badge level={c.risk} />, c.notes, c.source_ref ?? "-"],
             high: c.risk === "High",
           }))}
         />

@@ -7,6 +7,7 @@ import {
   Report,
   computeVerdict,
   computeVerdictAfterChecklist,
+  COPY_ADVICE_ITEM,
   type ReviewRequest,
   type ReviewResponse,
   type Usage,
@@ -31,11 +32,11 @@ Respond with a single JSON object and nothing else (no markdown fences, no comme
 Exact shape:
 {
   "summary": string,
-  "claims": [{"claim": string, "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "source_ref": <exact reference doc name> or null}],
+  "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "risk": "High"|"Medium"|"Low", "notes": string, "source_ref": <exact reference doc name> or null}],
   "attacks": [{"critic": "industry"|"asa"|"media"|"public"|"ad_owner", "quote": string}],
   "risks": [{"issue": string, "rating": "High"|"Medium"|"Low", "type": "regulatory"|"reputational"|"audience", "fixable_by_evidence": boolean}],
   "fixes": [{"issue": string, "fix": string, "sharpest_defensible_version": string}],
-  "checklist": [{"item": string, "related_claim": string or null, "why": string, "evidence_needed": string}],
+  "checklist": [{"item": string, "where": "keep on file"|"keep on file + publish on website (recommended)"|"get sign-off", "related_claim": string or null, "why": string, "evidence_needed": string}],
   "working": [string],
   "verdict": "Ready"|"Ready with minor fixes"|"Needs changes"|"High risk, get legal review",
   "legal_flags": [string]
@@ -51,6 +52,22 @@ Evidence and checklist rules:
 - Media-owner acceptance (TfL, Global and similar) is a checklist item, not a risk.
 - Each checklist item's evidence_needed must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
 - In every free-text field, cite rules and rulings by name (e.g. "CAP Code rule 3.7", "ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
+
+CAP Section 3 focus. For campaign ads, apply only these rules and ignore the rest of Section 3 (prices, availability, competitor comparisons, reviews, guarantees):
+- Judge the overall impression and likely effect on viewers, not intent.
+- 3.1: the ad must not materially mislead.
+- 3.2: obvious rhetoric or exaggeration people won't take literally is allowed. Don't demand evidence for it (claim_kind "rhetoric").
+- 3.6: opinions ("cruel", "wrong") are fine if clearly opinion (claim_kind "opinion"). Flag only an opinion presented as fact.
+- 3.7: factual claims (claim_kind "factual") need evidence HELD before launch, not shown on the ad. Only factual claims get missing-evidence risks or checklist items.
+- 3.3: for space-limited formats such as posters, supporting detail on the linked website counts in the advertiser's favour.
+- 3.9/3.10: if a claim is only accurate with a caveat (scope, region, date, "up to"), the caveat must be on the ad, clearly. A website can't fix a headline that is misleading without its caveat. This is a fix, not a checklist item.
+- 3.13: don't present contested science as settled; suggest attributing it ("X found...") instead.
+- 3.5: the ad must make clear who is behind it (name, logo or URL).
+- 3.47/3.50: quotes need proof they are genuine and accurate; quotes from published sources don't need permission.
+- 3.52: quoting a public body must not imply it endorses the campaign.
+- 3.51: never suggest saying the ad is ASA/CAP approved.
+- 3.23-3.26: apply only if the ad offers something "free".
+- Checklist "where": use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; "get sign-off" for approvals; otherwise "keep on file". Do not add a Copy Advice item; the system adds it.
 
 Length limits (strict):
 - summary: max 2 sentences.
@@ -218,8 +235,12 @@ export async function runReview(
     }
     if (parsed.ok) {
       const verdict = computeVerdict(parsed.data.risks);
+      const checklist = parsed.data.checklist.some((c) => /copy advice/i.test(c.item))
+        ? parsed.data.checklist
+        : [...parsed.data.checklist, { ...COPY_ADVICE_ITEM }];
       const report: Report = {
         ...parsed.data,
+        checklist,
         verdict,
         model_verdict: parsed.data.verdict !== verdict ? parsed.data.verdict : undefined,
         verdict_after_checklist: computeVerdictAfterChecklist(parsed.data.risks),
