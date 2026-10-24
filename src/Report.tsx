@@ -170,12 +170,18 @@ function verdictClass(v: NonNullable<Report["headline"]>) {
 }
 
 function ItemCard({ item }: { item: Item }) {
+  const suggested = item.type === "reword" && item.rating === "Low";
   return (
     <li className="border border-fg p-4 text-[15px]">
       <div className="flex items-start justify-between gap-3">
         <label className="flex items-start gap-3">
           <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
-          <span className="font-medium">{item.action}</span>
+          <span className="font-medium">
+            {suggested && !/^consider/i.test(item.action)
+              ? `Consider: ${item.action.charAt(0).toLowerCase()}${item.action.slice(1)}`
+              : item.action}
+            {suggested && <Tag>Suggested</Tag>}
+          </span>
         </label>
         <Badge level={item.rating} />
       </div>
@@ -338,7 +344,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   });
 
   const headline = report.headline ?? "Needs changes";
-  const { rewords, sources, approvers, responses } = pathToVerdict(report);
+  const { rewords, suggestedRewords, sources, approvers, responses } = pathToVerdict(report);
   const steps = [
     rewords > 0 && `reword ${rewords} ${rewords === 1 ? "line" : "lines"}`,
     sources > 0 && `check ${sources} ${sources === 1 ? "source" : "sources"}`,
@@ -354,10 +360,16 @@ export default function ReportView({ result }: { result: ReviewResult }) {
           <span className="font-semibold">Bottom line: </span>
           {report.bottom_line}
         </p>
-        {steps.length > 0 && (
+        {(steps.length > 0 || suggestedRewords > 0) && (
           <p className="mt-4 max-w-2xl text-[15px]">
             <span className="font-semibold">Before launch: </span>
             {steps.join(" · ")}
+            {suggestedRewords > 0 && (
+              <span className="opacity-60">
+                {steps.length > 0 ? " · " : ""}Optional: {suggestedRewords} suggested{" "}
+                {suggestedRewords === 1 ? "reword" : "rewords"}
+              </span>
+            )}
           </p>
         )}
         <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">

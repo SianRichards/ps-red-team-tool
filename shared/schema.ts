@@ -236,7 +236,9 @@ export interface Config {
  */
 export function pathToVerdict(report: Report) {
   const items = Object.values(report.tabs).flatMap((tab) => tab.items);
-  const rewords = items.filter((d) => d.type === "reword").length;
+  // High and Medium rewords are required; Low ones are suggestions.
+  const rewords = items.filter((d) => d.type === "reword" && d.rating !== "Low").length;
+  const suggestedRewords = items.filter((d) => d.type === "reword" && d.rating === "Low").length;
   const sources = items.filter((d) => d.type === "hold evidence").length;
   const responses = items.filter((d) => d.type === "prepare response" && d.rating !== "Low").length;
   const approvers: string[] = [];
@@ -245,7 +247,7 @@ export function pathToVerdict(report: Report) {
     const who = d.approver_known && d.approver ? d.approver : "the media owner";
     if (!approvers.includes(who)) approvers.push(who);
   }
-  return { rewords, sources, approvers, responses };
+  return { rewords, suggestedRewords, sources, approvers, responses };
 }
 
 /** "A", "A and B", "A, B and C". */

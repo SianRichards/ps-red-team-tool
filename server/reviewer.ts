@@ -97,7 +97,7 @@ Evidence and approval rules:
 - In free text, name rulings (e.g. "the ASA ruling on Viva!"). Never mention the "reference pack", file names, or tool internals.
 
 Bottom line:
-- bottom_line is one or two sentences of judgement: the ad's overall strength and its single biggest weak point. Do not describe the ad (the user knows it) and do not list actions (the "Before launch" line does that). Example: "A strong, defensible ad. The weakest point is the 90% figure, which needs checking, and the industry will say CO2 stunning is legal."
+- bottom_line is two sentences: one on the ad's overall strength, one on the top risks to check, in priority order. Never call parts of the ad "weak points" or "weaknesses"; frame them as risks and things to check. Do not describe the ad (the user knows it) and do not list actions (the "Before launch" line does that). Example: "A strong, defensible ad. The most important thing to check is the Animal Welfare Committee quote (word for word), then the 90% figure and the industry 'humane slaughter' claim."
 
 Plain English rules:
 - Write for a campaigner, not a lawyer. Short sentences, no jargon.
