@@ -16,6 +16,21 @@ Three points of view, matching the three report tabs: **Regulators** (the ASA, p
 **Built for UK ads**
 It assumes your ad will be seen in the UK and checks against the ASA's CAP Code and UK public and industry reactions. You can test an ad from another country, but it is still judged as if it were running in the UK.
 
+**What does it check against?**
+It uses an AI model given a fixed set of reference material:
+- [CAP Code](https://www.asa.org.uk/codes-and-rulings/advertising-codes/non-broadcast-code.html), as published in October 2026. These sections: Compliance, Misleading advertising, Harm and offence, Children, Privacy, Political advertisements, Environmental claims, and Food and health claims.
+- **ASA guidance** on fear and distress in ads, and on charity and campaign ads.
+- **Past ASA rulings**:
+  - [Viva!, 2023](https://www.asa.org.uk/rulings/viva--g23-1199062-viva-.html): a gory parody yoghurt ad was banned for shocking and distressing viewers, including children.
+  - [PETA, 2023](https://www.asa.org.uk/rulings/people-for-the-ethical-treatment-of-animals--peta--foundation-g23-1196052-people-for-the-ethical-treatment-of-animals--peta--foundation.html): a billboard showing a dead cat in place of a fish was cleared, as it was seen as mild and not gruesome.
+  - [RSPCA, 2025](https://www.asa.org.uk/rulings/royal-society-for-the-prevention-of-cruelty-to-animals-g24-1260091-royal-society-for-the-prevention-of-cruelty-to-animals.html): an ad about farm animal welfare was cleared, as its standards and audit data backed it up.
+  - [AHDB, 2026](http://asa.org.uk/rulings/agriculture-and-horticulture-development-board--a25-1278659--agriculture-and-horticulture-development-board.html): carbon footprint claims in press ads for British beef and dairy were ruled misleading. Its other claims were cleared.
+
+Limits:
+- It only knows the rulings listed above, not every ASA decision.
+- It doesn't cover TV or radio rules.
+- It can't see your evidence, so it flags claims to check rather than judging them true or false.
+
 **What can it help prevent?**
 - An ad banned after an ASA complaint, which hands industry a PR win
 - Legal threats over claims you can't fully back up
@@ -62,6 +77,17 @@ The Regulators tab also has any other legal checks. "What's working" comes after
 5. **Start it**: `npm run dev`, then open [http://localhost:5173](http://localhost:5173).
 
 Optional settings in `.env`: `MODEL_DEFAULT` and `MODEL_DEEP` (OpenRouter model IDs), `MODEL_JUDGE` (used by evals), `PORT` (default 3001; if you change it, update the proxy in `vite.config.ts` to match).
+
+## Updating the reference material
+
+`reference/` is laid out as:
+
+- `cap-section-*.md`: one file per CAP Code section.
+- `asa-advice-*.md`: ASA/CAP guidance pages.
+- `rulings/`: one card per ASA ruling, each with a `Link:` line (format below).
+- `evidence/`: for evidence files (research, statistics, policy documents). It doesn't exist yet; create it when you add the first one and put the source, date and region at the top of each file. There is no template file yet.
+
+Everything in `reference/` is sent to the model on every review. The "What does it check against?" list in the About modal (`src/components/AboutPanel.tsx`) and in this README is written by hand, so update both whenever files in `reference/` are added, removed or changed.
 
 ## Adding rulings and evidence
 
