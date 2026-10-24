@@ -121,34 +121,6 @@ function Section({ title, children, open = false }: { title: string; children: R
   );
 }
 
-function Table({ head, rows }: { head: string[]; rows: { cells: ReactNode[] }[] }) {
-  if (!rows.length) return <p className="opacity-70">None.</p>;
-  return (
-    <table className="w-full text-left text-[15px]">
-      <thead>
-        <tr className="border-b border-fg">
-          {head.map((h) => (
-            <th key={h} className="px-3 py-2 text-sm font-semibold">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i} className="border-b border-fg/60 align-top">
-            {r.cells.map((c, j) => (
-              <td key={j} className="px-3 py-2">
-                {c}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 function List({ items }: { items: string[] }) {
   if (!items.length) return <p className="opacity-70">None.</p>;
   return (
@@ -282,22 +254,6 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
 
       {tabKey === "regulators" && (
         <div className="space-y-4">
-          <Section title="Claims checked">
-            <Table
-              head={["Claim", "Kind", "Evidence", "Notes", "Source"]}
-              rows={report.tabs.regulators.claims.map((c) => ({
-                cells: [
-                  c.claim,
-                  <Tag key="k">{c.claim_kind}</Tag>,
-                  c.evidence_status,
-                  <>
-                    {c.notes} <RuleTags rules={c.rules} />
-                  </>,
-                  c.source_ref ?? "-",
-                ],
-              }))}
-            />
-          </Section>
           {report.tabs.regulators.legal_flags.length > 0 && (
             <Section title="Other legal checks" open>
               <List items={report.tabs.regulators.legal_flags} />
