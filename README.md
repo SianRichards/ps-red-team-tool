@@ -1,6 +1,6 @@
 # ps-red-team-tool
 
-Reviews draft animal welfare campaign materials (ads, posters, scripts, social posts) before launch. It finds the weak points critics could use against you and suggests fixes that keep the impact. First built for Project Slingshot (UK).
+Reviews draft animal welfare campaign materials (ads, posters, scripts, social posts) before launch. It finds the risks critics could use against you and suggests fixes that keep the impact. First built for Project Slingshot (UK).
 
 <!-- TODO: add a screenshot of a report, e.g. docs/screenshot.png -->
 ![Screenshot of a review report (placeholder)](docs/screenshot.png)
@@ -8,15 +8,21 @@ Reviews draft animal welfare campaign materials (ads, posters, scripts, social p
 ## About this tool
 
 **What's red teaming?**
-Getting someone to attack your work on purpose, before your opponents do. It comes from military and security testing: one team plays the enemy to find weak spots.
+Getting someone to attack your work on purpose, before your opponents do. It comes from military and security testing: one team plays the enemy to find the risks.
 
 **What does this tool do?**
-It reads a draft ad, poster, script or post the way critics will. It flags weak points and suggests fixes that keep the message sharp.
+It reads a draft ad, poster, script or post the way critics will. It flags risks and suggests fixes that keep the message sharp.
+
+**Who does it think like?**
+Three points of view, matching the three report tabs: **Regulators** (the ASA, plus media owners like TfL or Meta), **Public & press**, and **Industry & critics**. The last two are likely reactions, not tested against real responses.
+
+**Built for UK ads**
+It assumes your ad will be seen in the UK and checks against the ASA's CAP Code and UK public and industry reactions. You can test an ad from another country, but it is still judged as if it were running in the UK.
 
 **What can it help prevent?**
 - An ad banned after an ASA complaint, which hands industry a PR win
 - Legal threats over claims you can't fully back up
-- Ads pulled by TfL or other poster sites
+- Ads being pulled
 - Press stories about exaggerated stats or unclear sources
 - Messages that put off the people you're trying to reach
 
@@ -32,7 +38,7 @@ At the top, always visible:
   - **Needs changes**: at least one line needs rewording.
   - **Nearly ready**: only evidence to hold, approvals to get, minor rewording or a response to prepare for a likely attack are left. A serious attack to prepare for never pushes the headline above this.
   - **Ready to launch**: nothing left to do.
-- **Bottom line**: the tool's judgement in a sentence or two: how strong the ad is and its biggest weak point.
+- **Bottom line**: the tool's judgement in a sentence or two: how strong the ad is and the top risks to check.
 - **Before launch**: what to do, in short: how many lines to reword, how many sources to check and keep on file, who has to approve (for example TfL or a lawyer), and how many serious attacks to prepare a response for.
 - One line per audience with its rating and its most important item.
 
@@ -48,7 +54,7 @@ The Regulators tab also has any other legal checks. "What's working" comes after
 
 ## Quick start
 
-1. **Install Node.js** (version 20.19 or newer; 22 LTS is a safe choice) from [nodejs.org](https://nodejs.org). npm comes with it.
+1. **Install Node.js** (version 20.19 or newer, or 22.12 or newer; 22 is recommended, and `.nvmrc` pins it for nvm users) from [nodejs.org](https://nodejs.org). npm comes with it.
 2. **Clone the repo**:
    ```
    git clone https://github.com/SianRichards/ps-red-team-tool.git
