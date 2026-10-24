@@ -46,13 +46,13 @@ export default function AboutPanel({ open, onClose }: { open: boolean; onClose: 
             <h3 className={heading}>What's red teaming?</h3>
             <p>
               Getting someone to attack your work on purpose, before your opponents do. It comes from military and
-              security testing: one team plays the enemy to find weak spots.
+              security testing: one team plays the enemy to find the risks.
             </p>
           </section>
           <section>
             <h3 className={heading}>What does this tool do?</h3>
             <p>
-              It reads a draft ad, poster, script or post the way critics will. It flags weak points and suggests fixes
+              It reads a draft ad, poster, script or post the way critics will. It flags risks and suggests fixes
               that keep the message sharp.
             </p>
           </section>
