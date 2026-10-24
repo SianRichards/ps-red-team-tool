@@ -46,7 +46,7 @@ export default function FileDrop({ files, onChange }: { files: File[]; onChange:
           add(e.dataTransfer.files);
         }}
         className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center text-sm transition-colors ${
-          over ? "border-red" : "border-fg/60 hover:border-fg"
+          over ? "border-red" : "border-line-60 hover:border-fg"
         }`}
       >
         <svg
@@ -79,16 +79,16 @@ export default function FileDrop({ files, onChange }: { files: File[]; onChange:
       {files.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-2">
           {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-full border border-fg/60 py-1 pl-1 pr-3 text-sm">
+            <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-full border border-line-60 py-1 pl-1 pr-3 text-sm">
               {previews[i] ? (
                 <img src={previews[i]!} alt="" className="h-8 w-8 rounded-full object-cover" />
               ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-fg/60 text-[10px] font-semibold">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-line-60 text-[10px] font-semibold">
                   pdf
                 </span>
               )}
               <span className="max-w-[16rem] truncate">{f.name}</span>
-              <span className="opacity-70">{size(f.size)}</span>
+              <span className="text-muted">{size(f.size)}</span>
               <button
                 type="button"
                 aria-label={`Remove ${f.name}`}

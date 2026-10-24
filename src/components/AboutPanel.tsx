@@ -27,20 +27,22 @@ export default function AboutPanel({ open, onClose }: { open: boolean; onClose: 
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(90vw,40rem)] max-h-[85vh] rounded-3xl border border-fg bg-page p-0 text-fg backdrop:bg-black/60"
+      className="m-auto w-[min(90vw,40rem)] max-h-[85vh] overflow-hidden rounded-3xl border border-line bg-page p-0 text-fg backdrop:bg-black/60"
     >
-      <div className="relative px-6 py-6 sm:px-10">
-        <button
-          ref={closeRef}
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-fg hover:bg-fg hover:text-page"
-        >
-          <span aria-hidden="true">×</span>
-        </button>
-        <h2 id="about-title" className="big-title mb-6 pr-10 text-4xl">
-          About this tool
-        </h2>
+      <div className="about-scroll my-4 mr-3 max-h-[calc(85vh-2rem)] overflow-y-auto overscroll-contain pb-2 pl-6 pr-3 sm:pl-10 sm:pr-7">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 bg-page pb-6 pt-2">
+          <h2 id="about-title" className="big-title text-4xl">
+            About this tool
+          </h2>
+          <button
+            ref={closeRef}
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-fg text-xl leading-none hover:bg-fg hover:text-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange"
+          >
+            <span aria-hidden="true" className="text-[32px] leading-none">×</span>
+          </button>
+        </div>
         <div className="space-y-5">
           <section>
             <h3 className={heading}>What's red teaming?</h3>
@@ -57,6 +59,44 @@ export default function AboutPanel({ open, onClose }: { open: boolean; onClose: 
             </p>
           </section>
           <section>
+            <h3 className={heading}>Who does it think like?</h3>
+            <p>It reviews your ad from three points of view, matching the three tabs in the report.</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              <li>
+                <strong>Regulators</strong>: The{" "}
+                <a
+                  href="https://www.asa.org.uk/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-text underline-offset-2 hover:underline"
+                >
+                  ASA
+                </a>
+                , which can ban ads after a complaint, and media owners like TfL or Meta, who can refuse or remove them.
+                This is the most tested part of the tool.
+              </li>
+              <li>
+                <strong>Public &amp; press</strong>: How ordinary people and journalists might react, from being moved
+                to calling it preachy, exaggerated or hypocritical.
+              </li>
+              <li>
+                <strong>Industry &amp; critics</strong>: What farming bodies and opponents are likely to say, such as
+                "the footage is old", "UK standards are the highest" or "it's an attack on farmers".
+              </li>
+            </ul>
+            <p className="mt-2 text-sm text-muted">
+              Public and industry views are likely reactions, not tested against real responses.
+            </p>
+          </section>
+          <section>
+            <h3 className={heading}>Built for UK ads</h3>
+            <p>
+              It assumes your ad will be seen by people in the UK. It checks against UK rules (the ASA's CAP Code) and
+              UK public and industry reactions. You can test an ad from another country, but it will still be judged
+              as if it were running in the UK.
+            </p>
+          </section>
+          <section>
             <h3 className={heading}>What can it help prevent?</h3>
             <ul className="list-disc space-y-1 pl-5">
               <li>An ad banned after an ASA complaint, which hands industry a PR win</li>
@@ -68,7 +108,7 @@ export default function AboutPanel({ open, onClose }: { open: boolean; onClose: 
           </section>
           <section>
             <h3 className={heading}>What it isn't</h3>
-            <p>It's not a lawyer nor the final say. It flags risks; your team decides.</p>
+            <p>A lawyer or the final say. It flags risks; your team decides.</p>
           </section>
         </div>
       </div>

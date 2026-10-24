@@ -49,14 +49,14 @@ function ruleUrl(rule: string): string | null {
 }
 
 function Badge({ level }: { level: keyof typeof BADGE | null }) {
-  if (!level) return <span className="inline-block border border-fg/60 px-3 py-0.5 text-sm opacity-70">No items</span>;
+  if (!level) return <span className="inline-block border border-line-60 px-3 py-0.5 text-sm text-muted">No items</span>;
   return (
     <span className={`inline-block shrink-0 rounded-full px-3 py-0.5 text-sm font-semibold ${BADGE[level]}`}>{level}</span>
   );
 }
 
 function Tag({ children }: { children: ReactNode }) {
-  return <span className="ml-1 inline-block whitespace-nowrap border border-fg px-2 py-0.5 text-xs">{children}</span>;
+  return <span className="ml-1 inline-block whitespace-nowrap border border-line px-2 py-0.5 text-xs">{children}</span>;
 }
 
 function RuleTags({ rules }: { rules: string[] }) {
@@ -100,7 +100,7 @@ function RulingTags({ rulings }: { rulings: Item["rulings"] }) {
           target="_blank"
           rel="noopener noreferrer"
           title="Open the ruling on the ASA site"
-          className="whitespace-nowrap border border-fg/40 px-1.5 py-0.5 text-xs text-fg/70 underline-offset-2 hover:text-fg hover:underline"
+          className="whitespace-nowrap border border-line-40 px-1.5 py-0.5 text-xs text-fg/70 underline-offset-2 hover:text-fg hover:underline"
         >
           {r.name}
         </a>
@@ -111,7 +111,7 @@ function RulingTags({ rulings }: { rulings: Item["rulings"] }) {
 
 function Section({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
   return (
-    <details open={open} className="panel border border-fg">
+    <details open={open} className="panel border border-line">
       <summary className="select-none px-5 py-3 text-sm font-semibold">
         <span aria-hidden className="mr-2 inline-block h-2 w-2 bg-red align-middle" />
         {title}
@@ -122,7 +122,7 @@ function Section({ title, children, open = false }: { title: string; children: R
 }
 
 function List({ items }: { items: string[] }) {
-  if (!items.length) return <p className="opacity-70">None.</p>;
+  if (!items.length) return <p className="text-muted">None.</p>;
   return (
     <ul className="list-disc space-y-2 pl-5 text-[15px]">
       {items.map((x, i) => (
@@ -144,7 +144,7 @@ function verdictClass(v: NonNullable<Report["headline"]>) {
 function ItemCard({ item }: { item: Item }) {
   const suggested = item.type === "reword" && item.rating === "Low";
   return (
-    <li className="border border-fg p-4 text-[15px]">
+    <li className="border border-line p-4 text-[15px]">
       <div className="flex items-start justify-between gap-3">
         <label className="flex items-start gap-3">
           <input type="checkbox" className="mt-1 h-4 w-4 shrink-0" />
@@ -214,7 +214,7 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
   const { note } = TABS[tabKey];
   return (
     <div className="space-y-8">
-      {note && <p className="text-sm opacity-70">{note}</p>}
+      {note && <p className="text-sm text-muted">{note}</p>}
 
       <section>
         <h3 className="mb-2 font-semibold">Overall assessment</h3>
@@ -248,7 +248,7 @@ function TabPanel({ tabKey, report }: { tabKey: TabKey; report: Report }) {
             })}
           </div>
         ) : (
-          <p className="opacity-70">Nothing to do for this audience.</p>
+          <p className="text-muted">Nothing to do for this audience.</p>
         )}
       </section>
 
@@ -273,7 +273,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
   // Reviews saved before the to-do list format have no `items` and can't be shown.
   if (!report?.tabs || !Array.isArray(report.tabs.regulators?.items)) {
     return (
-      <p className="border border-fg p-4 text-[15px]">
+      <p className="border border-line p-4 text-[15px]">
         This review is in an older format and can't be shown. Re-run the review.
       </p>
     );
@@ -310,7 +310,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
 
   return (
     <div className="space-y-8">
-      <div className="border-t border-fg pt-6">
+      <div className="border-t border-line pt-6">
         <h2 className={`big-title text-6xl sm:text-7xl ${verdictClass(headline)}`}>{headline}</h2>
         <p className="mt-4 max-w-2xl text-[15px]">
           <span className="font-semibold">Bottom line: </span>
@@ -321,14 +321,14 @@ export default function ReportView({ result }: { result: ReviewResult }) {
             <span className="font-semibold">Before launch: </span>
             {steps.join(" · ")}
             {suggestedRewords > 0 && (
-              <span className="opacity-60">
+              <span className="text-muted">
                 {steps.length > 0 ? " · " : ""}Optional: {suggestedRewords} suggested{" "}
                 {suggestedRewords === 1 ? "reword" : "rewords"}
               </span>
             )}
           </p>
         )}
-        <ul className="mt-5 max-w-2xl divide-y divide-fg/40 border-y border-fg/40 text-[15px]">
+        <ul className="mt-5 max-w-2xl divide-y divide-line-40 border-y border-line-40 text-[15px]">
           {summaryRows.map((r) => (
             <li key={r.key} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
               <button className="w-40 text-left font-semibold underline-offset-4 hover:underline" onClick={() => setActive(r.key)}>
@@ -349,7 +349,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
       )}
 
       <div>
-        <div role="tablist" aria-label="Audiences" className="flex flex-wrap border-b border-fg">
+        <div role="tablist" aria-label="Audiences" className="flex flex-wrap border-b border-line">
           {TAB_KEYS.map((k, i) => {
             const row = summaryRows[i];
             const selected = active === k;
@@ -367,12 +367,12 @@ export default function ReportView({ result }: { result: ReviewResult }) {
                 onClick={() => setActive(k)}
                 onKeyDown={(e) => onKeyDown(e, i)}
                 className={`flex items-center gap-2 border border-b-0 px-4 py-2 text-[15px] font-semibold ${
-                  selected ? "border-fg bg-fg/10" : "border-transparent hover:border-fg/60"
+                  selected ? "border-line bg-fg/10" : "border-transparent hover:border-line-60"
                 }`}
               >
                 {TABS[k].label}
                 <Badge level={row.rating} />
-                <span className="text-sm font-normal opacity-70">{row.count}</span>
+                <span className="text-sm font-normal text-muted">{row.count}</span>
               </button>
             );
           })}
@@ -384,7 +384,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
           tabIndex={0}
           className="pt-6 focus-visible:outline-offset-4"
         >
-          <p className="mb-6 text-sm opacity-70">{TABS[active].who}</p>
+          <p className="mb-6 text-sm text-muted">{TABS[active].who}</p>
           <TabPanel tabKey={active} report={report} />
         </div>
       </div>
@@ -393,7 +393,7 @@ export default function ReportView({ result }: { result: ReviewResult }) {
         <List items={report.working} />
       </Section>
 
-      <p className="text-xs opacity-70">
+      <p className="text-xs text-muted">
         Not legal advice. This tool supports the campaign team; get legal review for anything flagged.
       </p>
     </div>

@@ -44,11 +44,11 @@ Below that are three tabs, one per audience: **Regulators** (the ASA, CAP and me
 - **Get approval**: from the media owner, a lawyer, and so on.
 - **Prepare a response**: a likely attack and a suggested reply.
 
-The Regulators tab also has the claims checked and any other legal checks. "What's working" comes after the tabs.
+The Regulators tab also has any other legal checks. "What's working" comes after the tabs.
 
-## Setup
+## Quick start
 
-1. **Install Node.js** (version 20 or newer) from [nodejs.org](https://nodejs.org).
+1. **Install Node.js** (version 20.19 or newer; 22 LTS is a safe choice) from [nodejs.org](https://nodejs.org). npm comes with it.
 2. **Clone the repo**:
    ```
    git clone https://github.com/SianRichards/ps-red-team-tool.git
@@ -58,7 +58,7 @@ The Regulators tab also has the claims checked and any other legal checks. "What
 4. **Add your API key.** Copy `.env.example` to `.env` and set `OPENROUTER_API_KEY` to your key from [openrouter.ai/keys](https://openrouter.ai/keys). The key stays on your machine and is only used by the local server.
 5. **Start it**: `npm run dev`, then open [http://localhost:5173](http://localhost:5173).
 
-Optional settings in `.env`: `MODEL_DEFAULT` and `MODEL_DEEP` (OpenRouter model IDs), `MODEL_JUDGE` (used by evals), `PORT` (default 3001).
+Optional settings in `.env`: `MODEL_DEFAULT` and `MODEL_DEEP` (OpenRouter model IDs), `MODEL_JUDGE` (used by evals), `PORT` (default 3001; if you change it, update the proxy in `vite.config.ts` to match).
 
 ## Adding rulings and evidence
 
