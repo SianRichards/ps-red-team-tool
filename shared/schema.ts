@@ -2,18 +2,6 @@ import { z } from "zod";
 
 export const Rating = z.enum(["High", "Medium", "Low"]);
 
-export const CLAIM_KINDS = ["factual", "opinion", "rhetoric"] as const;
-
-export const Claim = z.object({
-  claim: z.string(),
-  // Only factual claims need evidence.
-  claim_kind: z.enum(CLAIM_KINDS).default("factual"),
-  evidence_status: z.enum(["Sourced", "Weak", "Missing", "Not checked"]),
-  notes: z.string().default(""),
-  rules: z.array(z.string()).default([]),
-  source_ref: z.string().nullable().default(null),
-});
-
 export const ITEM_TYPES = ["hold evidence", "reword", "get approval", "prepare response", "rethink"] as const;
 export const EVIDENCE_WHERE = ["keep on file", "keep on file + publish on website (recommended)"] as const;
 
@@ -51,7 +39,6 @@ export const Tab = z.object({
 });
 
 export const RegulatorsTab = Tab.extend({
-  claims: z.array(Claim).default([]),
   legal_flags: z.array(z.string()).default([]),
 });
 

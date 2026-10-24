@@ -38,7 +38,6 @@ Exact shape:
     "regulators": {
       "assessment": string,
       "items": [ITEM],
-      "claims": [{"claim": string, "claim_kind": "factual"|"opinion"|"rhetoric", "evidence_status": "Sourced"|"Weak"|"Missing"|"Not checked", "notes": string, "rules": [string], "source_ref": <exact reference doc name> or null}],
       "legal_flags": [string]
     },
     "public": {"assessment": string, "items": [ITEM]},
@@ -49,7 +48,7 @@ Exact shape:
 }
 ITEM = {"id": string, "action": string, "type": "hold evidence"|"reword"|"get approval"|"prepare response"|"rethink", "rating": "High"|"Medium"|"Low", "ad_quote": the ad's exact words or null, "detail": string, "why": string or null, "where": "keep on file"|"keep on file + publish on website (recommended)" or null, "suggested_wording": string or null, "likely_attack": string or null, "suggested_reply": string or null, "approver": string or null, "approver_known": boolean, "rules": [string], "rulings": [{"name": string, "url": string}]}
 
-Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs, and set source_ref to the exact doc name (or null). If nothing in the docs supports a claim, say so in notes. Sort items High first.
+Rules: never invent rulings or sources. Only cite rulings that appear in the reference docs. Sort items High first.
 
 Items: one item per problem, with its action. Never describe a problem separately from its action.
 - "action" is a plain title of what to do, max about 10 words. Examples: "Check the 90% figure has a UK-wide source on file", "Reword 'gas chambers' to avoid offence", "Prepare a reply to 'it's legal, approved and being phased out'".
@@ -75,8 +74,7 @@ Rulings in plain English:
 - List each ruling an item draws on in its "rulings" array: "name" is a short plain label (e.g. "PETA fish-to-cat poster, 2023, not upheld") and "url" is the Link from that ruling's card in the reference docs, copied exactly. Never invent a url. Empty array if none.
 
 Evidence and approval rules:
-- Assess the ad as submitted. Missing evidence for a factual claim is a "hold evidence" item. Use evidence_status "Not checked" when no source has been provided.
-- CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
+- Assess the ad as submitted. Missing evidence for a factual claim is a "hold evidence" item.- CAP 3.7 means the advertiser must HOLD evidence, not show it on the ad. Never suggest adding citations, footnotes or sources to the ad; posters are meant to be minimal.
 - If a claim goes beyond what any credible source could support (as in the Viva! "linked to cancer" ruling), the item is "reword", not "hold evidence".
 - Distress, offence and imagery problems are never "hold evidence": use "reword", or "rethink" if the concept itself is the problem.
 - Only use "hold evidence" or "get approval" if holding evidence or approval would fix the problem. A claim that needs rewording gets a "reword" item only.
@@ -90,7 +88,7 @@ Evidence and approval rules:
   - Own channels (own website, organic posts on the advertiser's own accounts) -> no media-owner approval item; at most a low-priority note to check the platform's community guidelines.
 - Each "hold evidence" detail must be specific: what the source must show to match how the ad will be read (scope, date, region, exact wording). Example: "a UK-wide, post-2020 source showing 90% of pigs...; if it says 'up to' or 'England', reword the claim".
 - Never tell users to "cite" a source or "add a source" in a way that implies putting it on the ad. Say "hold" or "keep on file" instead.
-- A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it: claim_kind "factual", not "rhetoric".
+- A line that attributes words to someone ("They say...", "The industry calls it...") is a factual claim that they said it, not rhetoric.
 - One item per problem. Never combine an evidence problem ("hold evidence") with a wording or caveat problem ("reword") in one item; split them. Example: "Check the 90% stat has a source on file" (hold evidence) vs "90% may only apply to England; the ad says UK" (reword or add a caveat on the ad). Only raise the wording or caveat item if there is a real reason to suspect it, not as a generic possibility.
 - Do not add a Copy Advice item; the system adds it.
 - Use "keep on file + publish on website (recommended)" for headline stats and quotes likely to be challenged publicly; otherwise "keep on file".
@@ -104,14 +102,14 @@ Plain English rules:
 - Name things specifically: quote the ad's exact words, and name the body or source (e.g. "the Animal Welfare Committee, which advises the government") rather than "the committee" or "the claim".
 - No generic hedging (e.g. "may be selective, out of context or outdated"). State the specific concern and why, or leave it out.
 - Say what to do, not just the rule. Example: "Check the quote matches the report word for word, and avoid wording that suggests the committee supports your campaign."
-- Never put rule numbers in sentences. Put them in the "rules" array on items and claims, in the form ["CAP 3.47", "CAP 3.52"] (empty array if none). Any regulators item that could break a CAP rule (misleading, distress, offence, harm) must name that rule in "rules".
+- Never put rule numbers in sentences. Put them in the "rules" array on items, in the form ["CAP 3.47", "CAP 3.52"] (empty array if none). Any regulators item that could break a CAP rule (misleading, distress, offence, harm) must name that rule in "rules".
 
 CAP Section 3 focus. For campaign ads, apply only these rules and ignore the rest of Section 3 (prices, availability, competitor comparisons, reviews, guarantees):
 - Judge the overall impression and likely effect on viewers, not intent.
 - 3.1: the ad must not materially mislead.
-- 3.2: obvious rhetoric or exaggeration people won't take literally is allowed. Don't demand evidence for it (claim_kind "rhetoric").
-- 3.6: opinions ("cruel", "wrong") are fine if clearly opinion (claim_kind "opinion"). Flag only an opinion presented as fact.
-- 3.7: factual claims (claim_kind "factual") need evidence HELD before launch, not shown on the ad. Only factual claims get "hold evidence" items.
+- 3.2: obvious rhetoric or exaggeration people won't take literally is allowed. Don't demand evidence for it.
+- 3.6: opinions ("cruel", "wrong") are fine if clearly opinion. Flag only an opinion presented as fact.
+- 3.7: factual claims need evidence HELD before launch, not shown on the ad. Only factual claims get "hold evidence" items.
 - 3.3: for space-limited formats such as posters, supporting detail on the linked website counts in the advertiser's favour.
 - 3.9/3.10: if a claim is only accurate with a caveat (scope, region, date, "up to"), the caveat must be on the ad, clearly. A website can't fix a headline that is misleading without its caveat. This is a "reword" item, not "hold evidence".
 - 3.13: don't present contested science as settled; suggest attributing it ("X found...") instead.
@@ -126,9 +124,7 @@ legal_flags: short "check with a lawyer if..." items (e.g. defamation if naming 
 Length limits (strict):
 - bottom_line: 1-2 sentences. assessment: max 2 sentences.
 - At most 6 items per tab, highest-impact first; merge minor points.
-- action: max 10 words. detail: max 25 words. why: max 30 words. suggested_wording: max 25 words. suggested_reply: max 30 words. likely_attack: max 25 words.
-- claims[].notes: max 20 words.
-- working: max 5 items, one line each.
+- action: max 10 words. detail: max 25 words. why: max 30 words. suggested_wording: max 25 words. suggested_reply: max 30 words. likely_attack: max 25 words.- working: max 5 items, one line each.
 - No preamble, reasoning or any text outside the JSON object.
 `;
 
@@ -207,17 +203,12 @@ function extractJson(raw: string): unknown {
   }
 }
 
-/** Flags source_refs that match no reference file, and ruling names absent from the pack. */
+/** Flags ruling links and names absent from the pack. */
 export function checkCitations(report: Report, docs: Record<string, string>): string[] {
   const problems = new Set<string>();
-  for (const c of report.tabs.regulators.claims) {
-    if (c.source_ref && !(c.source_ref.replaceAll("\\", "/") in docs))
-      problems.add(`source_ref '${c.source_ref}' does not match any file in reference/ (use the relative path, e.g. rulings/peta-2023-08.md)`);
-  }
   const corpus = Object.values(docs).join("\n").toLowerCase();
   const texts = [
     report.bottom_line,
-    ...report.tabs.regulators.claims.map((c) => c.notes),
     ...report.tabs.regulators.legal_flags,
     ...Object.values(report.tabs).flatMap((tab) => [
       tab.assessment,

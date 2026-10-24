@@ -38,7 +38,6 @@ evals/run_evals.ts       # not built yet
 
 ## Report schema (JSON)
 - `summary`: str
-- `claims`: list of {claim, evidence_status: Sourced|Weak|Missing, risk: High|Medium|Low, notes, source_ref (reference doc name or null)}
 - `attacks`: list of {critic: industry|asa|media|public|ad_owner, quote}
 - `risks`: list of {issue, rating: High|Medium|Low, type: regulatory|reputational|audience}, sorted High first
 - `fixes`: list of {issue, fix, sharpest_defensible_version}

@@ -84,8 +84,6 @@ function reportText(r: Report): string {
       );
     }
   }
-  for (const c of r.tabs.regulators.claims)
-    lines.push(`Claim: ${c.claim} [${c.claim_kind}/${c.evidence_status}] ${c.notes}`);
   for (const l of r.tabs.regulators.legal_flags) lines.push(`Legal flag: ${l}`);
   return lines.join("\n");
 }
