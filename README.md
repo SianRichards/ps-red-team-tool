@@ -2,9 +2,6 @@
 
 Reviews draft animal welfare campaign materials (ads, posters, scripts, social posts) before launch. It finds the risks critics could use against you and suggests fixes that keep the impact. First built for Project Slingshot (UK).
 
-<!-- TODO: add a screenshot of a report, e.g. docs/screenshot.png -->
-![Screenshot of a review report (placeholder)](docs/screenshot.png)
-
 ## About this tool
 
 **What's red teaming?**
